@@ -1,0 +1,24 @@
+lockfileVersion: '6.1'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+dependencies:
+  emojibase-data:
+    specifier: ^15.2.0
+    version: 15.2.0(emojibase@15.2.0)
+
+packages:
+
+  /emojibase-data@15.2.0(emojibase@15.2.0):
+    resolution: {integrity: sha512-hDiw4ugxnI4pcVQO+73NlKx6aZP/A+BAPfDgK/3A83RVbHZa0Ut6GHpd5r5XUV9G7BZhKejlIRuxhXialpbt6Q==}
+    peerDependencies:
+      emojibase: '*'
+    dependencies:
+      emojibase: 15.2.0
+    dev: false
+
+  /emojibase@15.2.0:
+    resolution: {integrity: sha512-gB6rIVtyJPersQvAo4nOGYPeILMhlcfZdiwCWVeRAtkJ7sm0tExZETGyLhrTQcHvZQhDEYI1vlCeqUhn5gZkQA==}
+    dev: false
