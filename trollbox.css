@@ -1,0 +1,312 @@
+body {
+    background: #000;
+    user-select: none;
+    font: 11px monospace;
+}
+
+#container {
+    background: #144;
+    display: grid;
+    position: fixed;
+    inset: 0;
+    gap: 8px;
+    padding: 8px;
+    grid-template-columns: 1fr 150px;
+    grid-template-rows: 1.5em 1fr auto;
+}
+
+.scroll,
+.infos {
+    padding: 1px 2px;
+    contain: size layout paint;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: #082020;
+}
+#tabbarctr {
+    grid-column-start: 1;
+    grid-column-end: 3;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+}
+#tabbar {
+    display: flex;
+    justify-content: space-around;
+}
+#tabbar input {
+    width: 0;
+    height: 0;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    position: absolute;
+    appearance: none;
+}
+#tabbar input:checked + label {
+    font-weight: bolder;
+	color: #7f9;
+}
+#tabbar label {
+    padding: 0 1ch;
+    margin: 0 .5ch;
+	color: #4a6;
+}
+#tabctl {
+	position: sticky;
+	display: flex;
+}
+#tabctl button {
+	border: none;
+	display: inline-block;
+	width: 2em;
+}
+#tabctl button:not(:first-child) {
+	border-left: 1px solid #7f9;
+}
+#tab_close::before {
+	content: "x";
+}
+#tab_create::before {
+	content: "+";
+}
+#type {
+    grid-column-start: 1;
+    grid-column-end: 3;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: auto 1fr auto;
+}
+.tab {
+	display: none;
+}
+#tabctr, .tab.visible {
+    display: contents;
+}
+#type>*, .infos, .scroll, #tabbarctr>* {
+    box-shadow: 1px 1px 3px;
+    border: 1px solid;
+}
+
+#container>* {
+    color: #7f9;
+}
+
+
+a {
+    color: #7f9;
+}
+a:active {
+    color: #4a6;
+}
+
+button {
+    font: inherit;
+    appearance: none;
+    border-radius: 0;
+    color: #7f9;
+    background: #144;
+    border: 1px solid;
+}
+
+button:disabled, textarea:disabled {
+    color: #277;
+}
+
+button:not(:disabled):active {
+    background: #4a6;
+}
+
+textarea,
+input[type=text],
+input[type=url],
+input[type=tel] {
+    font: inherit;
+    border: 1px solid;
+    resize: none;
+    text-indent: 0;
+    color: #7f9;
+    background: #144;
+    margin: 0;
+}
+
+
+label,
+.ui_menu--scroller>.ui_menu__up_handler:disabled,
+.ui_menu--scroller>.ui_menu__down_handler:disabled,
+.ui_menu .ui_menu__item--disabled,
+html,
+body,
+input[readonly]:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+textarea[readonly] {
+    cursor: url(cursors/default.cur), default
+}
+
+input[type=checkbox],
+input[type=radio],
+button,
+a {
+    cursor: url(cursors/pointer.cur), pointer
+}
+
+input,
+textarea {
+    cursor: url(cursors/text.cur), text
+}
+
+html>body [disabled] {
+    cursor: url(cursors/not-allowed.cur), not-allowed
+}
+
+:focus {
+    outline: dotted 1px;
+    outline-offset: -3px;
+}
+
+
+.prompt_outer {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	backdrop-filter: brightness(.05) blur(20px) brightness(20);
+	display: grid;
+	place-items: center;
+}
+
+.prompt_outer:not(.show) {
+    display: none;
+}
+
+.prompt {
+    color: #7f9;
+    background: #1447;
+    padding: 4px;
+    border: 1px solid;
+    box-shadow: 1px 1px 3px;
+    font: inherit;
+    width: min-content;
+}
+.tbprompt_input {
+	display: block;
+	width: 48ch;
+}
+.tbprompt_buttons {
+    text-align: right;
+    margin-right: -1px;
+}
+.tbprompt_buttons>* {
+    margin-left: 4px;
+}
+
+em {
+    opacity: 0.5;
+    text-shadow: 1px 0px;
+    letter-spacing: 0px;
+}
+
+#infos>.nick {
+    padding-left: 7px;
+}
+
+.line {
+    display: grid;
+    grid-template-columns: 70px 80px 1fr;
+}
+.line img:not(.emoji) {
+    max-width: 50%;
+    max-height: 50vh;
+    min-width: 4em;
+    min-height: 4em;
+}
+#typing_users {
+    height: 1.5em;
+    line-height: 1.5;
+    padding: 1px 4px;
+    grid-column-start: 1;
+    grid-column-end: 4;
+}
+
+.h {
+    color: #777;
+}
+
+.line>.nick {
+    border-right: 1px solid #555;
+    text-align: right;
+    padding-right: 5px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.line>.msg {
+    padding-left: 4px;
+}
+
+.msg_ctx {
+    user-select: text;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+b {
+    font-weight: bolder;
+}
+
+::selection {
+    background: #4a6;
+    color: #144;
+}
+
+.tbprompt_color_input_wrapper {
+    contain: strict;
+    width: 1em;
+    height: 1em;
+    float: right;
+    border: 1px solid #7f9c;
+}
+
+.tbprompt_color_input {
+    outline: none;
+    border: none;
+    width: 25px;
+    margin: -5px;
+    height: 25px;
+}
+
+#mice {
+    z-index: 63;
+    width: 100vw;
+    height: 100vh;
+    inset: 0;
+    position: fixed;
+    pointer-events: none;
+}
+.mouse {
+    transition: top .2s linear,
+               left .2s linear;
+    width: 32px;
+    height: 32px;
+    position: fixed;
+    pointer-events: none;
+    background: url('cursors/default.cur');
+}
+.mouse span {
+    max-width: 8em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    background: #000;
+    border: 1px solid;
+    padding: 1px;
+    top: 18px;
+    left: 12px;
+    position: relative;
+}
+
+.emoji {
+    width: 2ch;
+    height: 2ch;
+    vertical-align: bottom;
+}

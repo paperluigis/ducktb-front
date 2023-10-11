@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <meta name="title" content="ducktb">
+    <meta name="description" content="not a trollbox clone anymore, at all, not even visually">
+    <title>duck"tb"</title>
+    <link rel="stylesheet" href="trollbox.css">
+    <script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
+    <script defer src="index.js"></script>
+</head>
+<body>
+    <div id="container">
+		<div id="tabbarctr">
+			<div id="tabbar"></div>
+			<div id="tabctl">
+				<button id="tab_close"></button>
+				<button id="tab_create"></button>
+			</div>
+		</div>
+		<div id="tabctr">
+			<div id="tab_placeholder" class="tab visible">
+				<div class="scroll"></div>
+				<div class="infos"></div>
+			</div>
+		</div>
+        <div id="type">
+            <div id="typing_users"></div>
+            <button id="nick_btn">Nick</button>
+            <textarea id="input" autofocus maxlength="2000"></textarea>
+            <button id="send" disabled>Send</button>
+        </div>
+        <div id="mice"></div>
+        <div id="connectprompt" class="prompt_outer show">
+            <div class="prompt">
+                <div class="tbprompt_title">Connecting...</div>
+            </div>
+        </div>
+        <div id="roomcreateprompt" class="prompt_outer">
+            <div class="prompt">
+                <div class="tbprompt_title">Create a room</div>
+                <input type="text" class="tbprompt_input" placeholder="channel name" maxlength="48">
+                <div class="tbprompt_buttons">
+                    <button class="tbprompt_button1">Create</button><button class="tbprompt_button2">Cancel</button>
+                </div>
+            </div>
+        </div>
+        <div id="nickchangeprompt" class="prompt_outer">
+            <div class="prompt">
+                <div class="tbprompt_title">Enter a nickname</div>
+                <input type="text" class="tbprompt_input" maxlength="40">
+                and a color:
+                <span class="tbprompt_color_input_wrapper">
+                    <input class="tbprompt_color_input" type="color" style="outline: none;border: none;width: 25px;margin: -5px;height: 25px;">
+                </span>
+                <div class="tbprompt_buttons">
+                    <button class="tbprompt_button1">OK</button><button class="tbprompt_button2">Cancel</button>
+                </div>
+            </div>
+        </div>
+        <noscript>
+            <div class="prompt_outer show">
+                <div class="prompt_outer1"></div>
+                <div class="prompt_outer2">
+                    <div class="prompt">
+                        <div class="tbprompt_title">JavaScript must be enabled for this site to work.</div>
+                        <div class="tbprompt_buttons">
+                            <a href="."><button class="tbprompt_button1">Reload</button></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </noscript>
+    </div>
+</body>
+</html>
