@@ -83,11 +83,32 @@ body {
 #tabctr, .tab.visible {
     display: contents;
 }
-#type>*, .infos, .scroll, #tabbarctr>* {
+#input, #nick_btn, #send, #autocomp_bar, .infos, .scroll, #tabbarctr>*, #typing_users {
     box-shadow: 1px 1px 3px;
     border: 1px solid;
 }
-
+#input_wrap {
+	position: relative;
+}
+#input {
+	width: 100%;
+	box-sizing: border-box;
+}
+#autocomp_bar {
+	box-sizing: border-box;
+	max-width: 100%;
+	position: absolute;
+	bottom: calc(.5em + 100%);
+	backdrop-filter: brightness(.05) blur(20px) brightness(20);
+}
+.autocomp_entry {
+	padding: .15em .5em;
+}
+.autocomp_entry.active {
+	color: #144;
+	font-weight: bold;
+	background: #4a6;
+}
 #container>* {
     color: #7f9;
 }

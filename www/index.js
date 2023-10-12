@@ -140,6 +140,18 @@ function s_connect() {
     });
 }
 
+function updateAutocomplete(items) {
+	if(items.length == 0) {
+		autocomp_bar.hidden = true;
+		return;
+	};
+	autocomp_bar.hidden = false;
+	autocomp_bar.textContent = "";
+	for(let i in items) {
+
+	}
+}
+
 
 let tabs = new Map();
 let previous_tab = null;
@@ -178,6 +190,8 @@ function focusTab(tab, ss=true) {
 	tab.canSend = null;
 	tab.typing = null;
 	tab.closable = null;
+
+	location.hash = "#" + tab.key;
 
 	if(ss && tab.serverside)
 		s_send("ROOM", tab.key);
@@ -331,8 +345,18 @@ function createTab(name) {
 	return re;
 }
 
+const updateHash = ()=>{
+	const e = location.hash.slice(1).trim();
+	if(e && (!current_tab || current_tab.key != e))
+		focusTab(createTab(e));
+}
+
 let main_tab = createTab("lobby");
-focusTab(main_tab, false);
+
+updateHash();
+window.addEventListener("hashchange", updateHash);
+
+if(!current_tab) focusTab(main_tab, false);
 let ss_current_tab = main_tab;
 main_tab.closable = false;
 
