@@ -403,7 +403,7 @@ function formatMsg(a) {
             let bsrc = src.split(" ");
             let ealt = unmdhtml(shtml(alt)),
                 esrc = unmdhtml(shtml(src));
-            let psrc = unmdhtml("mediaproxy?u="+encodeURIComponent(src));
+			let psrc = unmdhtml("https://external-content.duckduckgo.com/iu/?u="+encodeURIComponent(src));
             return img ? `<img src="${e.protocol=="data:"?esrc:psrc}" alt="${ealt}">` : `<a href="${esrc}">${ealt}</a>`
         })
         .replace(/^(\\)?> (.+)/gm, function (entire, esc, ducks) {
