@@ -7,14 +7,18 @@ let color = "";
 let current;
 let emojimap = {};
 
-fetch('./emojimap.json')
-    .then(x => x.json())
-    .then(emap => {
-		for(let [k,v] of Object.entries(emap)){
-			let m=k.split(",");
-			for(let n of m)emojimap[n]=v;
-		}
-	});
+function attempt_get_emojimap() {
+	fetch('./emojimap.json')
+		.then(x => x.json())
+		.then(emap => {
+			for(let [k,v] of Object.entries(emap)){
+				let m=k.split(",");
+				for(let n of m)emojimap[n]=v;
+			}
+		})
+		.catch(e=>setTimeout(attempt_get_emojimap, 5000));
+}
+attempt_get_emojimap();
 
 function s_send(type, ...arg) {
     socket?.send?.(`${type}\0${JSON.stringify(arg)}`);
