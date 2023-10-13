@@ -420,7 +420,9 @@ function formatMsg(a) {
         return a
         .replace(/_/g, "&#95;")
         .replace(/\*/g, "&#42;")
-        .replace(/~/g, "&#126;");
+        .replace(/~/g, "&#126;")
+        .replace(/:/g, "&#58;")
+        .replace(/\\/g, "&#92;");
     }
     return shtml(a)
         .replace(/(\\)?(!)?\[(.+?)\]\((.+?)\)/gs, function (entire, escape, img, alt, src) {
@@ -436,8 +438,24 @@ function formatMsg(a) {
             let ealt = unmdhtml(shtml(alt)),
                 esrc = unmdhtml(shtml(src));
 			let psrc = unmdhtml("https://external-content.duckduckgo.com/iu/?u="+encodeURIComponent(src));
-            return img ? `<img src="${e.protocol=="data:"?esrc:psrc}" alt="${ealt}">` : `<a href="${esrc}">${ealt}</a>`
+            return img ? `<img src="${e.protocol=="data:"?esrc:psrc}" alt="${ealt}">` : `<a href="${esrc}" target="_blank">${ealt}</a>`
         })
+		.replace(/\b((?:https?:\/\/|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?]))/gi, function(duck) {
+            try {
+                let e = new URL(duck);
+                if (e.protocol != "http:" && e.protocol != "https:" && (img && e.protocol != "data:"))
+					return unmdhtml(duck);
+				let be = unmdhtml(shtml(""+e));
+				return `<a href="${be}" target="_blank">${be}</a>`;
+            } catch (e) {
+                return unmdhtml(duck)
+            }
+		})
+		.replace(/```(.+?)```|`(.+?)`/gs, function(entire, block, inline) {
+			if(inline) return `<code>${unmdhtml(inline)}</code>`;
+			else if(block) return `<pre>${unmdhtml(block)}</pre>`;
+			else return entire;
+		})
         .replace(/^(\\)?> (.+)/gm, function (entire, esc, ducks) {
             if (esc) return "> " + ducks;
             return `<span style="border-left: 4px solid #fff4; padding-left: 8px">` + ducks + "</span>";

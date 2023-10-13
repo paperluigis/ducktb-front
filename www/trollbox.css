@@ -122,6 +122,16 @@ a:active {
     color: #4a6;
 }
 
+code, pre {
+	background: #144;
+}
+pre {
+	margin: 0;
+	padding: .5em 1em;
+	white-space: pre-wrap;
+	max-width: 75%;
+}
+
 button {
     font: inherit;
     appearance: none;
