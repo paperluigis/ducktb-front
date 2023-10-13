@@ -140,12 +140,15 @@ function s_connect() {
     });
 }
 
+let ac_is_active = false;
 let active_ac_elt = null;
 function updateAutocomplete(items) {
 	if(items.length == 0) {
+		ac_is_active = false;
 		autocomp_bar.hidden = true;
 		return;
 	};
+	ac_is_active = true;
 	autocomp_bar.hidden = false;
 	autocomp_bar.textContent = "";
 	for(let i of items) {
@@ -482,6 +485,12 @@ let not_typing, can_sus, too_fast;
 function update_disabled() {
     send.disabled = too_fast || !can_sus;
 }
+input.onkeydown = function (e) {
+	if(!ac_is_active) return;
+	if(e.code == "Tab") {
+		e.preventDefault();
+	}
+}
 input.onkeypress = function (e) {
     if (!e.shiftKey && e.code == "Enter") {
         e.preventDefault();
@@ -498,10 +507,12 @@ input.oninput = function(a) {
 
 	let pos = input.selectionStart;
 	if(input.selectionStart != input.selectionEnd);
-	let sl = input.value.slice(0,pos).match(/:(\w+)$/)?.[1];
-	if(sl?.length<2) updateAutocomplete([]);
+	let sl = input.value.slice(0,pos).match(/:(\w+)$/d);
+	let be = sl?.[1] || "";
+	let id = sl?.indices[1][0];
+	if(be.length<2) updateAutocomplete([]);
 	else updateAutocomplete(Object.entries(emojimap)
-		.filter(([k,v])=>k.startsWith(sl)&&!/(?:_tone\d|_(?:medium|dark|light|medium_dark|medium_light)_skin_tone)(?:_|$)/.test(k))
+		.filter(([k,v])=>k.startsWith(be)&&!/(?:_tone\d|_(?:medium|dark|light|medium_dark|medium_light)_skin_tone)(?:_|$)/.test(k))
 		.sort(([k1,v1],[k2,v2])=>k1.length>k2.length)
 		.map(([k,v])=>`${v} :${k}:`) );
 }
@@ -515,6 +526,7 @@ send.onclick = function (a) {
     too_fast = true;
     update_disabled();
     setTimeout(()=>{too_fast=false; update_disabled()}, 3000);
+	updateAutocomplete([]);
     return current_tab.sendTyping(false);
 }
 
