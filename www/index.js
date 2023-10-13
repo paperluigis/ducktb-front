@@ -140,6 +140,7 @@ function s_connect() {
     });
 }
 
+let active_ac_elt = null;
 function updateAutocomplete(items) {
 	if(items.length == 0) {
 		autocomp_bar.hidden = true;
@@ -147,8 +148,11 @@ function updateAutocomplete(items) {
 	};
 	autocomp_bar.hidden = false;
 	autocomp_bar.textContent = "";
-	for(let i in items) {
-
+	for(let i of items) {
+		let b = document.createElement("div");
+		b.className = "autocomp_entry";
+		b.textContent = i;
+		autocomp_bar.appendChild(b);
 	}
 }
 
@@ -473,6 +477,14 @@ input.oninput = function(a) {
     can_sus = !!(this.value.trim().length);
     current_tab.sendTyping(can_sus);
     update_disabled();
+
+	let pos = input.selectionStart;
+	if(input.selectionStart != input.selectionEnd);
+	let sl = input.value.slice(0,pos).match(/:(\w+)$/)?.[1];
+	if(sl?.length<2) updateAutocomplete([]);
+	else updateAutocomplete(Object.entries(emojimap)
+		.filter(([k,v])=>k.startsWith(sl)&&!/(?:_tone\d|_(?:medium|dark|light|medium_dark|medium_light)_skin_tone)$/.test(k))
+		.map(([k,v])=>`${v} :${k}:`) );
 }
 send.onclick = function (a) {
     a && a.preventDefault()
