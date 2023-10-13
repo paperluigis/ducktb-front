@@ -483,7 +483,8 @@ input.oninput = function(a) {
 	let sl = input.value.slice(0,pos).match(/:(\w+)$/)?.[1];
 	if(sl?.length<2) updateAutocomplete([]);
 	else updateAutocomplete(Object.entries(emojimap)
-		.filter(([k,v])=>k.startsWith(sl)&&!/(?:_tone\d|_(?:medium|dark|light|medium_dark|medium_light)_skin_tone)$/.test(k))
+		.filter(([k,v])=>k.startsWith(sl)&&!/(?:_tone\d|_(?:medium|dark|light|medium_dark|medium_light)_skin_tone)(?:_|$)/.test(k))
+		.sort(([k1,v1],[k2,v2])=>k1.length>k2.length)
 		.map(([k,v])=>`${v} :${k}:`) );
 }
 send.onclick = function (a) {
