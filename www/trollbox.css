@@ -18,7 +18,7 @@ body {
 .scroll,
 .infos {
     padding: 1px 2px;
-    contain: size layout paint;
+    contain: layout paint;
     overflow-y: auto;
     overflow-x: hidden;
     background: #082020;
@@ -341,4 +341,21 @@ b {
     width: 2ch;
     height: 2ch;
     vertical-align: bottom;
+}
+
+
+
+@media (max-width: 50em) {
+	.scroll {
+		grid-column-start: 1;
+		grid-column-end: 3;
+	}
+	.infos {
+		position: absolute;
+		right: 2em;
+		top: 4em;
+		min-width: 12em;
+		max-width: 20em;
+		max-height: 10em;
+	}
 }
