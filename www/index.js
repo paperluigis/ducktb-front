@@ -471,7 +471,6 @@ function formatMsg(a) {
             let e;
             try {
                 e = new URL(uhtml(src));
-				console.log(e);
                 if (e.protocol != "http:" && e.protocol != "https:" && (img && e.protocol != "data:")) return entire
             } catch (e) {
                 return entire
@@ -484,7 +483,7 @@ function formatMsg(a) {
         })
 		//.replace(/\b((?:https?:\/\/|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?]))/gi, function(duck) {
 		//.replace(/(?:https?:\/\/)(?:[a-z0-9-]+\.)*[a-z0-9]+(?:\/[-a-z0-9+$@#\\/%?=~_()|!:,.;]*(?:[-A-Za-z0-9+$@#\\/%=~_()|](?:&(?:\w+;)?)?)+)?/gi, function(duck) {
-		.replace(/(?:https?:\/\/)(?:[a-z0-9-]+\.)*[a-z0-9]+(?:[-A-Za-z0-9+$@#\/%?=~_()|!:,.;]|&amp;)+(?:[-A-Za-z0-9+$@#\/%=~_()|]|&amp;)/gi, function(duck) {
+		.replace(/(?:https?:\/\/)(?:[a-z0-9-]+\.)*[a-z0-9]+(?:[-a-z0-9+$@#\/%?=~_()|!:,.;]|&amp;)+(?:[-a-z0-9+$@#\/%=~_()|]|&amp;)/gi, function(duck) {
             try {
                 let e = new URL(duck);
                 if (e.protocol != "http:" && e.protocol != "https:" && (img && e.protocol != "data:"))
