@@ -6,6 +6,7 @@ let pseudo;
 let color = "";
 let current;
 let emojimap = {};
+let emojientr = [];
 
 function attempt_get_emojimap() {
 	fetch('./emojimap.json')
@@ -14,6 +15,8 @@ function attempt_get_emojimap() {
 			for(let [k,v] of Object.entries(emap)){
 				let m=k.split(",");
 				for(let n of m)emojimap[n]=v;
+				emojientr = Object.entries(emojimap).filter(([k,v])=>!/(?:_tone\d|_(?:medium|dark|light|medium_dark|medium_light)_skin_tone)(?:_|$)/.test(k)).sort(([k1,v1],[k2,v2])=>k1.length>k2.length);
+
 			}
 		})
 		.catch(e=>setTimeout(attempt_get_emojimap, 5000));
@@ -140,25 +143,54 @@ function s_connect() {
     });
 }
 
+let ac_items = [];
 let ac_is_active = false;
-let active_ac_elt = null;
-function updateAutocomplete(items) {
-	if(items.length == 0) {
+let ac_active_elt = null;
+let ac_select_start = null;
+let ac_select_end = null;
+function acTrigger(str, pos) {
+	// emoji
+	let sl = str.slice(0,pos).match(/:(\w+)$/d);
+	let be = sl?.[1] || "";
+	ac_select_start = sl?.indices[1][0];
+	ac_select_end = pos;
+	// console.log(`acTrigger(${JSON.stringify(str)}, ${pos}), ${be}`);
+	if(be.length<2) acUpdate([]);
+	else acUpdate(emojientr.filter(([k,v])=>k.startsWith(be)).slice(0,30)
+		.map(([k,v])=>[`${v} :${k}:`, `${k}:`]) );
+}
+function acUpdate(items) {
+	ac_items = Array.from(items);
+	if(ac_items.length == 0) {
 		ac_is_active = false;
+		ac_select_start = ac_select_end = null;
 		autocomp_bar.hidden = true;
 		return;
 	};
 	ac_is_active = true;
 	autocomp_bar.hidden = false;
 	autocomp_bar.textContent = "";
-	for(let i of items) {
+	for(let [label, value] of ac_items) {
 		let b = document.createElement("div");
 		b.className = "autocomp_entry";
-		b.textContent = i;
+		b.textContent = label;
 		autocomp_bar.appendChild(b);
 	}
+	acSetActive(0);
 }
-
+function acComplete() {
+	if(ac_active_elt == null) return;
+	input.selectionStart = ac_select_start;
+	input.selectionEnd = ac_select_end;
+	// yeah yeah
+	document.execCommand("insertText", false, ac_items[ac_active_elt][1]);
+}
+function acSetActive(n) {
+	ac_active_elt = Math.max(0, Math.min(n|0, ac_items.length-1));
+	if(isNaN(ac_active_elt) || n == null || !ac_items.length) ac_active_elt = null;
+	autocomp_bar.querySelector(".active")?.classList.remove("active")
+	autocomp_bar.children[ac_active_elt]?.classList.add("active");
+}
 
 let tabs = new Map();
 let previous_tab = null;
@@ -414,41 +446,50 @@ function formatMsg(a) {
     // he.encode works too, but let's pretend it doesn't exist :P
     function shtml(a) {
         return a
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            // .replace(/>/g, "&gt;")  not really necessary
-            .replace(/"/g, "&quot;")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll('"', "&quot;");
     }
+	// undoes replacements done by shtml
+	function uhtml(a) {
+        return a
+            .replaceAll("&amp;", "&")
+            .replaceAll("&lt;", "<")
+            .replaceAll("&quot;", '"');
+	}
     function unmdhtml(a){
         return a
-        .replace(/_/g, "&#95;")
-        .replace(/\*/g, "&#42;")
-        .replace(/~/g, "&#126;")
-        .replace(/:/g, "&#58;")
-        .replace(/\\/g, "&#92;");
+			.replaceAll("_", "&#95;")
+			.replaceAll("*", "&#42;")
+			.replaceAll("~", "&#126;")
+			.replaceAll(":", "&#58;")
+			.replaceAll("\\", "&#92;");
     }
     return shtml(a)
         .replace(/(\\)?(!)?\[(.+?)\]\((.+?)\)/gs, function (entire, escape, img, alt, src) {
             if (escape) return entire.slice(1);
             let e;
             try {
-                e = new URL(src)
+                e = new URL(uhtml(src));
+				console.log(e);
                 if (e.protocol != "http:" && e.protocol != "https:" && (img && e.protocol != "data:")) return entire
             } catch (e) {
                 return entire
             }
             let bsrc = src.split(" ");
-            let ealt = unmdhtml(shtml(alt)),
+            let ealt = unmdhtml(alt),
                 esrc = unmdhtml(shtml(src));
-			let psrc = unmdhtml("https://external-content.duckduckgo.com/iu/?u="+encodeURIComponent(src));
-            return img ? `<img src="${e.protocol=="data:"?esrc:psrc}" alt="${ealt}">` : `<a href="${esrc}" target="_blank">${ealt}</a>`
+			let psrc = unmdhtml("https://external-content.duckduckgo.com/iu/?u="+encodeURIComponent(e));
+            return img ? `<img src="${e.protocol=="data:"?esrc:psrc}" alt="${ealt}">` : `<a href="${esrc}" target="_blank">${alt}</a>`
         })
-		.replace(/\b((?:https?:\/\/|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?]))/gi, function(duck) {
+		//.replace(/\b((?:https?:\/\/|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?]))/gi, function(duck) {
+		//.replace(/(?:https?:\/\/)(?:[a-z0-9-]+\.)*[a-z0-9]+(?:\/[-a-z0-9+$@#\\/%?=~_()|!:,.;]*(?:[-A-Za-z0-9+$@#\\/%=~_()|](?:&(?:\w+;)?)?)+)?/gi, function(duck) {
+		.replace(/(?:https?:\/\/)(?:[a-z0-9-]+\.)*[a-z0-9]+(?:[-A-Za-z0-9+$@#\/%?=~_()|!:,.;]|&amp;)+(?:[-A-Za-z0-9+$@#\/%=~_()|]|&amp;)/gi, function(duck) {
             try {
                 let e = new URL(duck);
                 if (e.protocol != "http:" && e.protocol != "https:" && (img && e.protocol != "data:"))
 					return unmdhtml(duck);
-				let be = unmdhtml(shtml(""+e));
+				let be = unmdhtml(""+e);
 				return `<a href="${be}" target="_blank">${be}</a>`;
             } catch (e) {
                 return unmdhtml(duck)
@@ -459,9 +500,9 @@ function formatMsg(a) {
 			else if(block) return `<pre>${unmdhtml(block)}</pre>`;
 			else return entire;
 		})
-        .replace(/^(\\)?> (.+)/gm, function (entire, esc, ducks) {
+        .replace(/^(\\)?> (.+)(\n|$)/g, function (entire, esc, ducks) {
             if (esc) return "> " + ducks;
-            return `<span style="border-left: 4px solid #fff4; padding-left: 8px">` + ducks + "</span>";
+            return `<div style="border-left: .75ch solid #144; padding-left: 1.25ch">${ducks}</div>`;
         })
         .replace(/(\\)?:(\w+?):/g, function (entire, esc, ducks) {
             if (esc) return `:${ducks}:`;
@@ -486,9 +527,22 @@ function update_disabled() {
     send.disabled = too_fast || !can_sus;
 }
 input.onkeydown = function (e) {
-	if(!ac_is_active) return;
-	if(e.code == "Tab") {
-		e.preventDefault();
+	if(ac_is_active) {
+		if(e.code == "Tab") {
+			e.preventDefault();
+			return acComplete();
+		}
+		let off = 0;
+		if(e.code == "ArrowDown") off = 1;
+		if(e.code == "ArrowUp") off = -1;
+		if(off) {
+			e.preventDefault();
+			let act = ac_active_elt;
+			act += off;
+			if(act < 0) act += ac_items.length;
+			if(act == ac_items.length) act = 0;
+			acSetActive(act);
+		}
 	}
 }
 input.onkeypress = function (e) {
@@ -504,17 +558,7 @@ input.oninput = function(a) {
     can_sus = !!(this.value.trim().length);
     current_tab.sendTyping(can_sus);
     update_disabled();
-
-	let pos = input.selectionStart;
-	if(input.selectionStart != input.selectionEnd);
-	let sl = input.value.slice(0,pos).match(/:(\w+)$/d);
-	let be = sl?.[1] || "";
-	let id = sl?.indices[1][0];
-	if(be.length<2) updateAutocomplete([]);
-	else updateAutocomplete(Object.entries(emojimap)
-		.filter(([k,v])=>k.startsWith(be)&&!/(?:_tone\d|_(?:medium|dark|light|medium_dark|medium_light)_skin_tone)(?:_|$)/.test(k))
-		.sort(([k1,v1],[k2,v2])=>k1.length>k2.length)
-		.map(([k,v])=>`${v} :${k}:`) );
+	if(input.selectionStart == input.selectionEnd) acTrigger(input.value, input.selectionEnd);
 }
 send.onclick = function (a) {
     a && a.preventDefault()
@@ -526,7 +570,7 @@ send.onclick = function (a) {
     too_fast = true;
     update_disabled();
     setTimeout(()=>{too_fast=false; update_disabled()}, 3000);
-	updateAutocomplete([]);
+	acUpdate([]);
     return current_tab.sendTyping(false);
 }
 
