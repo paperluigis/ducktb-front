@@ -1,3 +1,14 @@
+:root {
+	--bg0: #082020;
+	--bg1: #144;
+	--bg1t: #1448;
+	--fg0d: #277;
+	--fg0: #4a6;
+	--fg1: #7f9;
+	--border0: .15em solid;
+	--shadow0: .15em .15em .3em;
+	--backdrop0: brightness(.05) blur(.5em) brightness(20);
+}
 body {
     background: #000;
     user-select: none;
@@ -5,7 +16,7 @@ body {
 }
 
 #container {
-    background: #144;
+    background: var(--bg1);
     display: grid;
     position: fixed;
     inset: 0;
@@ -21,7 +32,7 @@ body {
     contain: layout paint;
     overflow-y: auto;
     overflow-x: hidden;
-    background: #082020;
+    background: var(--bg0);
 }
 #tabbarctr {
     grid-column-start: 1;
@@ -45,12 +56,12 @@ body {
 }
 #tabbar input:checked + label {
     font-weight: bolder;
-	color: #7f9;
+	color: var(--fg1);
 }
 #tabbar label {
     padding: 0 1ch;
     margin: 0 .5ch;
-	color: #4a6;
+	color: var(--fg0);
 }
 #tabctl {
 	position: sticky;
@@ -62,7 +73,7 @@ body {
 	width: 2em;
 }
 #tabctl button:not(:first-child) {
-	border-left: 1px solid #7f9;
+	border-left: var(--border0) var(--fg1);
 }
 #tab_close::before {
 	content: "x";
@@ -84,8 +95,8 @@ body {
     display: contents;
 }
 #input, #nick_btn, #send, #autocomp_bar, .infos, .scroll, #tabbarctr>*, #typing_users {
-    box-shadow: 1px 1px 3px;
-    border: 1px solid;
+    box-shadow: var(--shadow0);
+    border: var(--border0);
 }
 #input_wrap {
 	position: relative;
@@ -100,30 +111,30 @@ body {
 	max-width: 100%;
 	position: absolute;
 	bottom: calc(.5em + 100%);
-	backdrop-filter: brightness(.05) blur(20px) brightness(20);
+	backdrop-filter: var(--backdrop0);
 }
 .autocomp_entry {
 	padding: .15em .5em;
 }
 .autocomp_entry.active {
-	color: #144;
+	color: var(--bg1);
 	font-weight: bold;
-	background: #4a6;
+	background: var(--fg0);
 }
 #container>* {
-    color: #7f9;
+    color: var(--fg1);
 }
 
 
 a {
-    color: #7f9;
+    color: var(--fg1);
 }
 a:active {
-    color: #4a6;
+    color: var(--fg0);
 }
 
 code, pre {
-	background: #144;
+	background: var(--bg1);
 }
 pre {
 	margin: 0;
@@ -136,17 +147,17 @@ button {
     font: inherit;
     appearance: none;
     border-radius: 0;
-    color: #7f9;
-    background: #144;
-    border: 1px solid;
+    color: var(--fg1);
+    background: var(--bg1);
+    border: var(--border0);
 }
 
 button:disabled, textarea:disabled {
-    color: #277;
+    color: var(--fg0d);
 }
 
 button:not(:disabled):active {
-    background: #4a6;
+    background: var(--fg0);
 }
 
 textarea,
@@ -154,11 +165,11 @@ input[type=text],
 input[type=url],
 input[type=tel] {
     font: inherit;
-    border: 1px solid;
+    border: var(--border0);
     resize: none;
     text-indent: 0;
-    color: #7f9;
-    background: #144;
+    color: var(--fg1);
+    background: var(--bg1);
     margin: 0;
 }
 
@@ -202,7 +213,7 @@ html>body [disabled] {
 	left: 0;
 	right: 0;
 	bottom: 0;
-	backdrop-filter: brightness(.05) blur(20px) brightness(20);
+	backdrop-filter: var(--backdrop0);
 	display: grid;
 	place-items: center;
 }
@@ -212,11 +223,11 @@ html>body [disabled] {
 }
 
 .prompt {
-    color: #7f9;
-    background: #1447;
+    color: var(--fg1);
+    background: var(--bg1t);
     padding: 4px;
-    border: 1px solid;
-    box-shadow: 1px 1px 3px;
+    border: var(--border0);
+    box-shadow: var(--shadow0);
     font: inherit;
     width: min-content;
 }
@@ -226,7 +237,6 @@ html>body [disabled] {
 }
 .tbprompt_buttons {
     text-align: right;
-    margin-right: -1px;
 }
 .tbprompt_buttons>* {
     margin-left: 4px;
@@ -265,7 +275,7 @@ em {
 }
 
 .line>.nick {
-    border-right: 1px solid #555;
+    border-right: var(--border0) #555;
     text-align: right;
     padding-right: 5px;
     text-overflow: ellipsis;
@@ -288,8 +298,8 @@ b {
 }
 
 ::selection {
-    background: #4a6;
-    color: #144;
+    background: var(--fg0);
+    color: var(--bg1);
 }
 
 .tbprompt_color_input_wrapper {
@@ -297,7 +307,7 @@ b {
     width: 1em;
     height: 1em;
     float: right;
-    border: 1px solid #7f9c;
+    border: var(--border0) var(--fg1);
 }
 
 .tbprompt_color_input {
@@ -330,7 +340,7 @@ b {
     text-overflow: ellipsis;
     white-space: nowrap;
     background: #000;
-    border: 1px solid;
+    border: var(--border0);
     padding: 1px;
     top: 18px;
     left: 12px;
@@ -357,5 +367,7 @@ b {
 		min-width: 12em;
 		max-width: 20em;
 		max-height: 10em;
+		background: #0000;
+		backdrop-filter: var(--backdrop0);
 	}
 }
