@@ -147,16 +147,17 @@ function s_connect() {
 }
 
 // modifiable object (is to be modified by "plugins" (userscripts))
+// const ac_triggers: Record<string, (str: string, pos: number) => [[string, string][], number, number]>
 const ac_triggers = {
 	emoji(str, pos) {
 		let sl = str.slice(0,pos).match(/:(\w+)$/d);
 		let be = sl?.[1] || "";
-		ac_select_start = sl?.indices[1][0];
-		ac_select_end = pos;
-		if(be.length<2) return [];
-		else return emojientr[be[0]]
+		let ss = sl?.indices[1][0];
+		let se = pos;
+		if(be.length<2) return [[],ss,se];
+		else return [emojientr[be[0]]
 			.filter(([k,v])=>k.startsWith(be)).slice(0,30)
-			.map(([k,v])=>[`${v} :${k}:`, `${k}:`]);
+			.map(([k,v])=>[`${v} :${k}:`, `${k}:`]), ss, se];
 	}
 }
 
@@ -168,15 +169,17 @@ let ac_select_end = null;
 
 function acTrigger(str, pos) {
 	for(let [k,f] of Object.entries(ac_triggers)) {
-		let result = Array.from(f(str, pos));
+		let [result, sel_start, sel_end] = f(str, pos);
 		if(result.length) {
-			acUpdate(result);
+			acUpdate(result, sel_start, sel_end);
 			return;
 		}
 	}
-	acUpdate([]);
+	acUpdate([], sel_start, sel_end);
 }
-function acUpdate(items) {
+function acUpdate(items, sel_start, sel_end) {
+	ac_select_start = sel_start;
+	ac_select_end = sel_end;
 	ac_items = Array.from(items);
 	if(ac_items.length == 0) {
 		ac_is_active = false;
