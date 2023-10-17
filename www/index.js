@@ -6,17 +6,20 @@ let pseudo;
 let color = "";
 let current;
 let emojimap = {};
-let emojientr = [];
+let emojientr = {};
 
-function attempt_get_emojimap() {
+async function attempt_get_emojimap() {
 	fetch('./emojimap.json')
 		.then(x => x.json())
 		.then(emap => {
 			for(let [k,v] of Object.entries(emap)){
-				let m=k.split(",");
-				for(let n of m)emojimap[n]=v;
-				emojientr = Object.entries(emojimap).filter(([k,v])=>!/(?:_tone\d|_(?:medium|dark|light|medium_dark|medium_light)_skin_tone)(?:_|$)/.test(k)).sort(([k1,v1],[k2,v2])=>k1.length>k2.length);
-
+				emojimap[k[0]]??={};
+				emojimap[k[0]][k]=v;
+			}
+			for(let [k,v] of Object.entries(emojimap)) {
+				emojientr[k] = Object.entries(v)
+					.filter(([k,v])=>!/(?:_tone\d|_(?:medium|dark|light|medium_dark|medium_light)_skin_tone)(?:_|$)/.test(k))
+					.sort(([k1,v1],[k2,v2])=>k1.length>k2.length);
 			}
 		})
 		.catch(e=>setTimeout(attempt_get_emojimap, 5000));
@@ -143,21 +146,35 @@ function s_connect() {
     });
 }
 
+// modifiable object (is to be modified by "plugins" (userscripts))
+const ac_triggers = {
+	emoji(str, pos) {
+		let sl = str.slice(0,pos).match(/:(\w+)$/d);
+		let be = sl?.[1] || "";
+		ac_select_start = sl?.indices[1][0];
+		ac_select_end = pos;
+		if(be.length<2) return [];
+		else return emojientr[be[0]]
+			.filter(([k,v])=>k.startsWith(be)).slice(0,30)
+			.map(([k,v])=>[`${v} :${k}:`, `${k}:`]);
+	}
+}
+
 let ac_items = [];
 let ac_is_active = false;
 let ac_active_elt = null;
 let ac_select_start = null;
 let ac_select_end = null;
+
 function acTrigger(str, pos) {
-	// emoji
-	let sl = str.slice(0,pos).match(/:(\w+)$/d);
-	let be = sl?.[1] || "";
-	ac_select_start = sl?.indices[1][0];
-	ac_select_end = pos;
-	// console.log(`acTrigger(${JSON.stringify(str)}, ${pos}), ${be}`);
-	if(be.length<2) acUpdate([]);
-	else acUpdate(emojientr.filter(([k,v])=>k.startsWith(be)).slice(0,30)
-		.map(([k,v])=>[`${v} :${k}:`, `${k}:`]) );
+	for(let [k,f] of Object.entries(ac_triggers)) {
+		let result = Array.from(f(str, pos));
+		if(result.length) {
+			acUpdate(result);
+			return;
+		}
+	}
+	acUpdate([]);
 }
 function acUpdate(items) {
 	ac_items = Array.from(items);
@@ -505,7 +522,7 @@ function formatMsg(a) {
         })
         .replace(/(\\)?:(\w+?):/g, function (entire, esc, ducks) {
             if (esc) return `:${ducks}:`;
-            return emojimap[ducks] || entire;
+            return emojimap[ducks[0]]?.[ducks] || entire;
         })
         .replace(/([^\\]|^)\*\*(.+?[^\\])\*\*/gs, "$1<b>$2</b>")
         .replace(/([^\\]|^)\*(.+?[^\\])\*/gs, "$1<i>$2</i>")
