@@ -187,19 +187,27 @@ function acUpdate(items) {
 	ac_is_active = true;
 	autocomp_bar.hidden = false;
 	autocomp_bar.textContent = "";
+	let i = 0;
 	for(let [label, value] of ac_items) {
 		let b = document.createElement("div");
 		b.className = "autocomp_entry";
 		b.textContent = label;
+		b.addEventListener("click", function(i, e){
+			e.preventDefault();
+			acComplete(i);
+		}.bind(null,i))
 		autocomp_bar.appendChild(b);
+		i++
 	}
 	acSetActive(0);
 }
-function acComplete() {
+function acComplete(i=null) {
+	if(i!=null) acSetActive(i);
 	if(ac_active_elt == null) return;
 	input.selectionStart = ac_select_start;
 	input.selectionEnd = ac_select_end;
 	// yeah yeah
+	input.focus();
 	document.execCommand("insertText", false, ac_items[ac_active_elt][1]);
 }
 function acSetActive(n) {
