@@ -494,7 +494,7 @@ function formatMsg(a) {
                 return unmdhtml(duck)
             }
 		})
-		.replace(/```(.+?)```|`(.+?)`/gs, function(entire, block, inline) {
+		.replace(/```(?:(\w+)\n)?(.+?)```|`(.+?)`/gs, function(entire, language, block, inline) {
 			if(inline) return `<code>${unmdhtml(inline)}</code>`;
 			else if(block) return `<pre>${unmdhtml(block)}</pre>`;
 			else return entire;
