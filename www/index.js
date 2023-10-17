@@ -154,7 +154,7 @@ const ac_triggers = {
 		let be = sl?.[1] || "";
 		let ss = sl?.indices[1][0];
 		let se = pos;
-		if(be.length<2) return [[],ss,se];
+		if(be.length<2 || !emojientr[be[0]]) return [[],ss,se];
 		else return [emojientr[be[0]]
 			.filter(([k,v])=>k.startsWith(be)).slice(0,30)
 			.map(([k,v])=>[`${v} :${k}:`, `${k}:`]), ss, se];
@@ -175,7 +175,7 @@ function acTrigger(str, pos) {
 			return;
 		}
 	}
-	acUpdate([], sel_start, sel_end);
+	acUpdate([], 0, 0);
 }
 function acUpdate(items, sel_start, sel_end) {
 	ac_select_start = sel_start;
