@@ -257,8 +257,8 @@ em {
     grid-template-columns: 70px 80px 1fr;
 }
 .line img:not(.emoji) {
-    max-width: 50%;
-    max-height: 50vh;
+    max-width: 100%;
+    max-height: 70vh;
     min-width: 4em;
     min-height: 4em;
 }
