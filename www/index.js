@@ -141,19 +141,50 @@ ui_input.addEventListener("keydown", ev=>{
 
 // tabs
 const tabs = new Map();
+const tab_duck = Symbol("duck key");
 
 class Tab {
-	constructor(name) {
-		
+	#id = "";
+	#name = "";
+	static #creating = false;
+	constructor(id) {
+		if(!Tab.#creating)
+			throw new Error("bro you can't just call the constructor man use Tab.create()");
+		this.#creating = false;
+
+		this.#id = id;
+
 	}
+	static create(id) {
+		let tab = tabs.get(id);
+		if(!tab) {
+			Tab.#creating = true;
+			tab = new Tab(id);
+			tabs.set(id, tab);
+		}
+		return tab;
+	}
+	get name() { return this.#name; }
+	set name(x) { this.#name = x; }
 	get duck() {
-		return Math.random()
+		return Math.random();
+	}
+	close() {
+		
 	}
 }
 
+function createTab(id) {
+	let tab = tabs.get(id);
+	if(!tab) {
+		tab = new Tab(tab_duck, id);
+		tabs.set(id, tab);
+	}
+	return tab;
+}
 
 Object.assign(window, {
 	SimplePeer, tw,
 	acSetActive, acUpdate, acTrigger, ac_triggers,
-	tabs, Tab
+	tabs, Tab, createTab
 });
