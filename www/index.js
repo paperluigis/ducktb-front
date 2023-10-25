@@ -146,14 +146,35 @@ const tab_duck = Symbol("duck key");
 class Tab {
 	#id = "";
 	#name = "";
+	#users = {};
+	#el;
 	static #creating = false;
 	constructor(id) {
 		if(!Tab.#creating)
 			throw new Error("bro you can't just call the constructor man use Tab.create()");
-		this.#creating = false;
-
+		Tab.#creating = false;
 		this.#id = id;
-
+		// TODO: ui
+		let tabelt = document.createElement("div");
+		tabelt.className = "tab";
+		tabelt.id = "tab_" + name;
+		let scroll = document.createElement("div");
+		scroll.className = "scroll";
+		tabelt.appendChild(scroll);
+		let infos = document.createElement("div");
+		infos.className = "infos";
+		tabelt.appendChild(infos);
+		tabctr.appendChild(tabelt);
+		let opt = document.createElement("input");
+		opt.type = "radio";
+		opt.name = "tabsel";
+		opt.id = "tsel_" + name;
+		let optlabel = document.createElement("label");
+		optlabel.setAttribute("for", opt.id);
+		optlabel.textContent = name;
+		tabbar.appendChild(opt);
+		tabbar.appendChild(optlabel);
+		this.#el = { tabelt, scroll, infos, opt, optlabel };
 	}
 	static create(id) {
 		let tab = tabs.get(id);
@@ -165,13 +186,37 @@ class Tab {
 		return tab;
 	}
 	get name() { return this.#name; }
-	set name(x) { this.#name = x; }
-	get duck() {
-		return Math.random();
+	set name(x) {
+		this.#name = x;
+		// TODO: ui
+	}
+
+	get closed() {
+		return tabs.get(this.#id) != this;
 	}
 	close() {
-		
+		tabs.delete(this.#id);
+		// TODO: ui
 	}
+
+	updateUsers(data) {
+		// TODO: parse
+		// TODO: ui
+	}
+	printMsg(data) {
+		// TODO: parse
+		// TODO: ui
+	}
+	clearChat() {
+		// TODO: ui duh
+	}
+	scrollDown(force=false) {
+		// TODO: ui BRUH
+	}
+
+	// event handlers
+	onMessage = (message) => {};
+	onTyping = (is_typing) => {};
 }
 
 function createTab(id) {
