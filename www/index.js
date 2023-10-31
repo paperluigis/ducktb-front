@@ -77,10 +77,11 @@ function s_connect() {
 				ss_current_tab.updateUsers(json[0]);
             }; break;
             case "USER_JOINED": {
+				console.log(json);
                 ss_current_tab.printMsg({
                     sid: "system",
                     html: true,
-                    time: json[0].time,
+                    time: json[1],
                     content: printNick(json[0]).outerHTML + "<em> entered teh trollbox"
                 })
             }; break;
@@ -105,29 +106,30 @@ function s_connect() {
                 // nooooo i violated DRY what now
                 ss_current_tab.clearChat();
                 for(let msg of json[0]) {
-                    if(msg.message) {
-                        ss_current_tab.printMsg({sid: msg.sid, _user: msg, content: msg.message, time: msg.time });
-                    } else if(msg.joined) {
+                    switch(msg.type) {
+					case "message":
+                        ss_current_tab.printMsg({sid: msg.sid, _user: msg, content: msg.content, time: msg.ts }); break
+					case "join":
                         ss_current_tab.printMsg({
                             sid: "system",
                             html: true,
-                            time: msg.time,
+                            time: msg.ts,
                             content: printNick(msg).outerHTML + "<em> entered teh trollbox"
-                        })
-                    } else if(msg.left) {
+                        }); break
+					case "leave":
                         ss_current_tab.printMsg({
                             sid: "system",
                             html: true,
-                            time: msg.time,
+                            time: msg.ts,
                             content: printNick(msg).outerHTML + "<em> left teh trollbox"
-                        })
-                    } else if(msg.newnick) {
+                        }); break
+					case "chnick":
                         ss_current_tab.printMsg({
                             sid: "system",
                             html: true,
                             time: msg.time,
-                            content: printNick(msg).outerHTML + "<em> is now known as </em>" + printNick({nick:msg.newnick,color:msg.newcolor}).outerHTML
-                        })
+                            content: printNick({nick:msg.old_nick,color:msg.old_color}).outerHTML + "<em> is now known as </em>" + printNick({nick:msg.new_nick,color:msg.new_color}).outerHTML
+                        }); break
                     }
                 }
                 ss_current_tab.scrollDown(true);
