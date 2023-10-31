@@ -77,7 +77,6 @@ function s_connect() {
 				ss_current_tab.updateUsers(json[0]);
             }; break;
             case "USER_JOINED": {
-				console.log(json);
                 ss_current_tab.printMsg({
                     sid: "system",
                     html: true,
