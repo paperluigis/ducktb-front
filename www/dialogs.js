@@ -12,6 +12,7 @@ export function nickChangeDialog(cancellable, nick, color) {
 	let a3 = ct.querySelector(".a3");
 	let a4 = ct.querySelector(".a4");
 	let a5 = ct.querySelector(".a5");
+	ct.addEventListener("close", () => ct.remove());
 	a3.addEventListener("input", () => a2.value = a3.value.slice(1));
 	a3.addEventListener("change", () => a2.value = a3.value.slice(1));
 	a2.addEventListener("beforeinput", e => { if(e.data && !/^[0-9a-f]*$/.test(e.data)) e.preventDefault() });
