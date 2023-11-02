@@ -1,4 +1,6 @@
 // imports
+import { nickChangeDialog } from "./dialogs.js";
+
 import SimplePeer from "https://esm.sh/simple-peer@9";
 import CBOR from "https://esm.sh/cbor-js@0.1.0";
 import tw from "https://esm.sh/twemoji@14";
@@ -20,9 +22,13 @@ const tw_options = {
 // dom elements
 const ui_input = document.querySelector("#input");
 const ui_sendbtn = document.querySelector("#send");
+const ui_nickbtn = document.querySelector("#nick_btn");
 const ui_tabctr = document.querySelector("#tabctr");
 const ui_tabbar = document.querySelector("#tabbar");
 const ui_tab_placeholder = document.querySelector("#tab_placeholder");
+const ui_typing_users = document.querySelector("#typing_users");
+const ui_tab_closebtn = document.querySelector("#tab_close");
+const ui_tab_createbtn = document.querySelector("#tab_create");
 
 // emoji map
 let emojimap = {};
@@ -153,14 +159,25 @@ ui_input.addEventListener("keydown", ev=>{
 		}
 	}
 });
-ui_sendbtn.addEventListener("click", ev=>{
+ui_sendbtn.addEventListener("click", ()=>{
 	ui_input.focus();
 	if(Tab.focused.ui_handle_send()) {
 		acUpdate([], 0, 0);
-		ev.preventDefault();
 	}
 });
+ui_nickbtn.addEventListener("click", async ()=>{
+	let a = await nickChangeDialog(true, username[0], username[1]);
+	if(!a) return;
+	localStorage.user_pseudo = username[0] = ui_nickbtn.textContent = a[0];
+	localStorage.user_color  = username[1] = a[1];
+	for(let c of connections.values()) c.updateNickname();
+});
+ui_tab_closebtn.addEventListener("click", ()=>{
+	Tab.focused.close();
+});
+ui_tab_createbtn.addEventListener("click", ()=>{
 
+});
 // tabs
 const tabs = new Map();
 const tab_duck = Symbol("duck key");
@@ -169,6 +186,7 @@ class Tab {
 	#id = "";
 	#name = "";
 	#users = {};
+	#typing = [];
 	#scrollEnd = true;
 	#canSend = false;
 	#canType = true;
@@ -265,8 +283,20 @@ class Tab {
 		}
 		ui_input.disabled = !this.#canType;
 		ui_sendbtn.disabled = !this.#canSend || !validate_duck(ui_input.value);
+		ui_typing_users.textContent = "";
+		let tn;
+		for(let sid of this.#typing) {
+			if(!this.#users[sid]) continue;
+			ui_typing_users.appendChild(nickHTML(this.#users[sid]));
+			ui_typing_users.appendChild(tn=document.createTextNode(", "));
+		}
+		if(tn) tn.textContent = this.#typing.length > 1 ? " are typing…" : " is typing…";
 	}
 
+	updateTyping(data) {
+		this.#typing = [...data];
+		if(Tab.focused == this) { this.focus() }
+	}
 	updateUsers(data) {
 		this.#el.infos.innerHTML = `<em>ONLINE - ${data.length}</em>`;
 		this.#users = {};
@@ -321,6 +351,8 @@ class Tab {
 		if(this.onMessage(ui_input.value.trim()) == false) return false;
 		ui_input.value="";
 		this.focus();
+		this.#isTyping = false;
+		this.onTyping(false);
 		return true;
 	}
 
@@ -436,6 +468,7 @@ class Connection {
 		this.#name = name==null ? null : ""+name;
 		this.#uri.protocol = this.#uri.protocol.replace("http", "ws");
 		connections.set(id, this);
+		for(let a of JSON.parse(localStorage["rooms-"+id] || "[]")) this.createTab(a);
 	}
 	connect() {
 		clearTimeout(this.#reconn);
@@ -464,8 +497,8 @@ class Connection {
 		this.#ws.close();
 		clearTimeout(this.#reconn);
 	}
-	rate_remaining(name, sub=0) {
-		let qe;
+	#map_ratelimit_buckets(name) {
+		let qe = null;
 		switch(name) {
 			case "TYPING": qe = "typing"; break
 			case "MOUSE": qe = "mouse"; break;
@@ -473,20 +506,38 @@ class Connection {
 			case "MESSAGE": qe = "message"; break;
 			case "ROOM_JOIN": case "ROOM_LEAVE": qe = "room"; break;
 		}
+		return qe;
+	}
+	rate_remaining(name, sub=0) {
+		let qe = this.#map_ratelimit_buckets(name);
 		if(!qe) return -1;
+		let pc = this.#rate_cur[qe];
 		this.#rate_cur[qe] = Math.min(this.#rate_max[qe], this.#rate_cur[qe] + sub);
-		let b = this.#rate_max[qe] - this.#rate_cur[qe];
-		if(b == 0) switch(qe) {
+		if(this.#rate_max[qe] - this.#rate_cur[qe] == 0) switch(qe) {
 			case "message": for(let t of this.#tabs) t.canSend = false; break;
 		}
-		return b
+		return this.#rate_max[qe] - pc;
 	}
 	#rate_reset() {
-		for(let i in this.#rate_cur) this.#rate_cur[i] = 0;
+		for(let i of Object.keys(this.#rate_cur)) this.#rate_cur[i] = 0;
 		for(let t of this.#tabs) t.canSend = true;
+		for(let [b,e] of Object.entries(this.#event_queue)) {
+			console.log(b, ...e);
+			while(e.length && this.send_event(...e.shift()));
+			if(!e.length) delete this.#event_queue[b];
+		}
+	}
+	#event_queue = {};
+	send_event_queue(name, ...args) {
+		if(!this.#ws || this.#ws.readyState != 1) return false;
+		if(this.send_event(name, ...args)) return true;
+		let qe = this.#map_ratelimit_buckets(name);
+		this.#event_queue[qe] ||= [];
+		this.#event_queue[qe].push([name, ...args]);
+		return false;
 	}
 	send_event(name, ...args) {
-		if(this.#ws.readyState != 1) return false;
+		if(!this.#ws || this.#ws.readyState != 1) return false;
 		if(!this.rate_remaining(name, 1)) return false;
 		this.#ws.send(`${name}\0${JSON.stringify(args)}`);
 		return true;
@@ -554,7 +605,10 @@ class Connection {
 				let t = this.#tabs[args[0]];
 				t.printMsg(args[1])
 			}; break;
-			case "TYPING": {}; break;
+			case "TYPING": {
+				let t = this.#tabs[args[0]];
+				t.updateTyping(args[1])
+			}; break;
 			case "MOUSE": {}; break;
 			case "ROOM": {
 				let pt = this.#tabs;
@@ -567,6 +621,7 @@ class Connection {
 					console.log(this.#tabs, i.id);
 					i.close();
 				}
+				localStorage["rooms-"+this.#id] = JSON.stringify(this.#tabs.map(e=>e.id.slice(this.id.length+1)));
 			}; break;
 			case "RATE_LIMITS": {
 				this.#rate_max = args[0];
@@ -574,7 +629,7 @@ class Connection {
 			case "HELLO": {
 				console.log(`connected to ${this.#uri} -- ${args[0]}`);
 				this.#userid = args[1];
-				this.send_event("USER_JOINED", the_user[0], the_user[1], this.#tabs.map(e=>e.id.slice(this.id.length+1)));
+				this.send_event("USER_JOINED", username[0], username[1], this.#tabs.map(e=>e.id.slice(this.id.length+1)));
 			}; break;
 		}
 	}
@@ -585,7 +640,7 @@ class Connection {
 	createTab(room_name) {
 		room_name = room_name.trim();
 		let t = Tab.create(this.#id+"-"+room_name);
-		if(this.#tabs.includes(t)) return;
+		if(this.#tabs.includes(t)) return t;
 		this.#tabs.push(t);
 
 		t.name = (this.#name ? this.#name+" - #" : "#") + room_name;
@@ -600,30 +655,45 @@ class Connection {
 		}
 		t.onClose = () => {
 			let r = this.#tabs.findIndex(e=>e==t);
-			this.send_event("ROOM_LEAVE", r);
+			if(r != -1) this.send_event_queue("ROOM_LEAVE", r);
 		}
+		this.send_event_queue("ROOM_JOIN", room_name, false);
 		return t;
+	}
+	updateNickname() {
+		this.send_event_queue("USER_CHANGE_NICK", username[0], username[1])
 	}
 }
 
-const the_user = ["test", "#7a19ef"];
+const username = [localStorage.user_pseudo, localStorage.user_color];
 
 const default_ws_url = localStorage.ws_url ? new URL(localStorage.ws_url) : new URL("/ws",location.href);
 const default_connection = new Connection(default_ws_url, "default");
 default_connection.createTab("lobby").focus();
 
 function duckhash() {
-	default_connection.createTab(location.hash.slice(1)).focus();
+	default_connection.createTab(decodeURIComponent(location.hash.slice(1))).focus();
 }
 window.addEventListener("hashchange", duckhash);
 duckhash();
 
-default_connection.connect();
-
 Object.assign(window, {
+	nickChangeDialog,
 	SimplePeer, CBOR, tw,
 	acSetActive, acUpdate, acTrigger, ac_triggers,
 	tabs, Tab,
 	formatMsg, nickHTML,
-	Connection, connections, default_connection
+	Connection, connections, default_connection,
+	username
 });
+
+
+if(localStorage.user_pseudo == null) {
+	let [u, c] = await nickChangeDialog(false, "duck", "#4ae329");
+	localStorage.user_pseudo = username[0] = u;
+	localStorage.user_color  = username[1] = c;
+}
+ui_nickbtn.textContent = username[0];
+
+default_connection.connect();
+

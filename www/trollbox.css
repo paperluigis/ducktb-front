@@ -54,6 +54,7 @@ body {
     padding: 0;
     margin: 0;
     border: 0;
+    outline: none;
     position: absolute;
     appearance: none;
 }
@@ -163,10 +164,7 @@ button:not(:disabled):active {
     background: var(--fg0);
 }
 
-textarea,
-input[type=text],
-input[type=url],
-input[type=tel] {
+textarea, input {
     font: inherit;
     border: var(--border0);
     resize: none;
@@ -210,39 +208,50 @@ html>body [disabled] {
 }
 
 
-.prompt_outer {
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	backdrop-filter: var(--backdrop0);
-	display: grid;
-	place-items: center;
+dialog::backdrop {
+	backdrop-filter: brightness(.05) blur(.5em) brightness(20);
 }
 
-.prompt_outer:not(.show) {
-    display: none;
-}
-
-.prompt {
+dialog {
     color: var(--fg1);
     background: var(--bg1t);
     padding: 4px;
     border: var(--border0);
     box-shadow: var(--shadow0);
     font: inherit;
-    width: min-content;
 }
-.tbprompt_input {
+.prompt_input.block {
 	display: block;
-	width: 48ch;
 }
-.tbprompt_buttons {
+.prompt_input {
+	padding: 0 .25em;
+	width: 40ch;
+    vertical-align: bottom;
+}
+.prompt_buttons {
+	float: right;
     text-align: right;
 }
-.tbprompt_buttons>* {
+.prompt_buttons>* {
     margin-left: 4px;
+}
+.prompt_color_input_wrapper {
+    margin-left: 4px;
+	display: inline-block;
+    contain: strict;
+    box-sizing: border-box;
+    vertical-align: bottom;
+    width: 1.5em;
+    height: 1.5em;
+    border: var(--border0) var(--fg1);
+}
+.prompt_color_input {
+	appearance: none;
+    outline: none;
+    border: none;
+    width: 3em;
+    margin: -.5em;
+    height: 3em;
 }
 
 em {
@@ -303,22 +312,6 @@ b {
 ::selection {
     background: var(--fg0);
     color: var(--bg1);
-}
-
-.tbprompt_color_input_wrapper {
-    contain: strict;
-    width: 1em;
-    height: 1em;
-    float: right;
-    border: var(--border0) var(--fg1);
-}
-
-.tbprompt_color_input {
-    outline: none;
-    border: none;
-    width: 25px;
-    margin: -5px;
-    height: 25px;
 }
 
 #mice {
