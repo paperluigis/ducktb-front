@@ -19,6 +19,7 @@ const tw_options = {
 
 // dom elements
 const ui_input = document.querySelector("#input");
+const ui_sendbtn = document.querySelector("#send");
 const ui_tabctr = document.querySelector("#tabctr");
 const ui_tabbar = document.querySelector("#tabbar");
 const ui_tab_placeholder = document.querySelector("#tab_placeholder");
@@ -120,9 +121,20 @@ function acSetActive(n) {
 	autocomp_bar.querySelector(".active")?.classList.remove("active")
 	autocomp_bar.children[ac_active_elt]?.classList.add("active");
 }
-ui_input.addEventListener("blur", ()=>{ acUpdate([], 0, 0) });
-ui_input.addEventListener("input", ()=>{ acTrigger(ui_input.value, ui_input.selectionEnd) });
+
+function validate_duck(s) {
+	return !!s.trim();
+}
+ui_input.addEventListener("blur", ()=>acUpdate([], 0, 0));
+ui_input.addEventListener("input", ()=>{
+	acTrigger(ui_input.value, ui_input.selectionEnd);
+	Tab.focused.ui_handle_input(true);
+});
 ui_input.addEventListener("keydown", ev=>{
+	if(ev.code == "Enter" && !ev.shiftKey && Tab.focused.ui_handle_send()) {
+		acUpdate([], 0, 0);
+		ev.preventDefault();
+	}
 	if(ac_is_active) {
 		if(ev.code == "Tab") {
 			ev.preventDefault();
@@ -141,6 +153,13 @@ ui_input.addEventListener("keydown", ev=>{
 		}
 	}
 });
+ui_sendbtn.addEventListener("click", ev=>{
+	ui_input.focus();
+	if(Tab.focused.ui_handle_send()) {
+		acUpdate([], 0, 0);
+		ev.preventDefault();
+	}
+});
 
 // tabs
 const tabs = new Map();
@@ -151,6 +170,8 @@ class Tab {
 	#name = "";
 	#users = {};
 	#scrollEnd = true;
+	#canSend = false;
+	#canType = true;
 	#el;
 	static #previous;
 	static #focused;
@@ -181,7 +202,7 @@ class Tab {
 		ui_tabbar.appendChild(opt);
 		ui_tabbar.appendChild(optlabel);
 		this.#el = { tabelt, scroll, infos, opt, optlabel };
-		scroll.addEventListener("scroll", function() {
+		scroll.addEventListener("scroll", () => {
 			this.#scrollEnd = (scroll.scrollHeight - (scroll.scrollTop + scroll.clientHeight)) < 1;
 		});
 		opt.addEventListener("change", () => {
@@ -198,12 +219,21 @@ class Tab {
 		}
 		return tab;
 	}
+	static get focused() { return this.#focused; }
 	get users() { return this.#users; }
 	get id() { return this.#id }
 	get name() { return this.#name; }
 	set name(x) {
 		this.#name = x;
 		this.#el.optlabel.textContent = x;
+	}
+	set canType(x) {
+		this.#canType = x;
+		if(this == Tab.focused) { this.focus() }
+	}
+	set canSend(x) {
+		this.#canSend = x;
+		if(this == Tab.focused) { this.focus() }
 	}
 
 	get closed() {
@@ -226,12 +256,15 @@ class Tab {
 		}
 	}
 	focus() {
-		this.#el.opt.checked = true;
-
-		Tab.#previous = Tab.#focused;
-		Tab.#focused = this;
-		(Tab.#previous?.closed === false ? Tab.#previous.#el.tabelt : ui_tab_placeholder).classList.remove("visible");
-		Tab.#focused.#el.tabelt.classList.add("visible");
+		if(Tab.#focused != this) {
+			this.#el.opt.checked = true;
+			Tab.#previous = Tab.#focused;
+			Tab.#focused = this;
+			(Tab.#previous?.closed === false ? Tab.#previous.#el.tabelt : ui_tab_placeholder).classList.remove("visible");
+			Tab.#focused.#el.tabelt.classList.add("visible");
+		}
+		ui_input.disabled = !this.#canType;
+		ui_sendbtn.disabled = !this.#canSend || !validate_duck(ui_input.value);
 	}
 
 	updateUsers(data) {
@@ -249,7 +282,7 @@ class Tab {
 			color: "#0f0",
 			home: "local",
 			sid: "system"
-		} : users[data.sid]);
+		} : this.#users[data.sid]);
 		let ltime = document.createElement("span");
 		ltime.className = "time";
 		ltime.textContent = (new Date(data.time)).toTimeString().split(" ")[0];
@@ -268,7 +301,27 @@ class Tab {
 		this.#el.scroll.textContent = "";
 	}
 	scrollDown(force=false) {
-		if(force||this.#scrollEnd) this.#el.scrollTop = this.#el.scrollHeight;
+		if(force||this.#scrollEnd) this.#el.scroll.scrollTop = this.#el.scroll.scrollHeight;
+	}
+
+	#isTyping = false;
+	#typeTimer;
+	ui_handle_input(i=true) {
+		this.focus();
+		if(i) {
+			clearTimeout(this.#typeTimer);
+			this.#typeTimer = setTimeout(()=>this.ui_handle_input(false), 2000);
+		}
+		if(this.#isTyping == i) return;
+		this.#isTyping = i;
+		this.onTyping(i);
+	}
+	ui_handle_send() {
+		if(ui_sendbtn.disabled) return false;
+		if(this.onMessage(ui_input.value.trim()) == false) return false;
+		ui_input.value="";
+		this.focus();
+		return true;
 	}
 
 	// event handlers
@@ -362,11 +415,11 @@ function formatMsg(a) {
 		.replace(/\\\\/g, "\\")
 }
 
-
+const connections = new Map();
 class Connection {
 	#rate_max;
-	#rate_cur = {message:0,typing:0,room:0,mouse:0};
-	#rate_reset;
+	#rate_cur = {message:0,typing:0,chnick:0,room:0,mouse:0};
+	#rate_reset_timer;
 	#uri;
 	#name;
 	#userid;
@@ -374,23 +427,25 @@ class Connection {
 	#ws;
 	#reconn;
 	#tabs = [];
+	#c_nick = "duck";
+	#c_color = "#a3e130";
 	constructor(uri, id, name) {
+		if(connections.has(id)) throw new Error("There is already a connection by that ID.");
 		this.#uri = new URL(uri);
 		this.#id = id;
 		this.#name = name==null ? null : ""+name;
 		this.#uri.protocol = this.#uri.protocol.replace("http", "ws");
+		connections.set(id, this);
 	}
 	connect() {
 		clearTimeout(this.#reconn);
 		this.#ws = new WebSocket(this.#uri, "json-v2");
 		this.#ws.addEventListener("open", ()=>{
-			this.#rate_reset = setInterval(()=>{
-				for(let i in this.#rate_cur) this.#rate_cur[i] = 0;
-			}, 5100); // overshoot a little
+			this.#rate_reset_timer = setInterval(()=>this.#rate_reset(), 5100); // overshoot a little
 		});
 		this.#ws.addEventListener("close", ()=>{
 			this.#reconn = setTimeout(()=>this.connect(), 5000);
-			clearInterval(this.#rate_reset);
+			clearInterval(this.#rate_reset_timer);
 		});
 		this.#ws.addEventListener("message", (b)=>{
 			if(typeof b.data == "string") {
@@ -409,8 +464,32 @@ class Connection {
 		this.#ws.close();
 		clearTimeout(this.#reconn);
 	}
+	rate_remaining(name, sub=0) {
+		let qe;
+		switch(name) {
+			case "TYPING": qe = "typing"; break
+			case "MOUSE": qe = "mouse"; break;
+			case "USER_CHANGE_NICK": qe = "chnick"; break;
+			case "MESSAGE": qe = "message"; break;
+			case "ROOM_JOIN": case "ROOM_LEAVE": qe = "room"; break;
+		}
+		if(!qe) return -1;
+		this.#rate_cur[qe] = Math.min(this.#rate_max[qe], this.#rate_cur[qe] + sub);
+		let b = this.#rate_max[qe] - this.#rate_cur[qe];
+		if(b == 0) switch(qe) {
+			case "message": for(let t of this.#tabs) t.canSend = false; break;
+		}
+		return b
+	}
+	#rate_reset() {
+		for(let i in this.#rate_cur) this.#rate_cur[i] = 0;
+		for(let t of this.#tabs) t.canSend = true;
+	}
 	send_event(name, ...args) {
+		if(this.#ws.readyState != 1) return false;
+		if(!this.rate_remaining(name, 1)) return false;
 		this.#ws.send(`${name}\0${JSON.stringify(args)}`);
+		return true;
 	}
 	#handle_event(name, args) {
 		switch(name) {
@@ -432,10 +511,10 @@ class Connection {
 				let t = this.#tabs[args[0]];
 				let b = t.users[args[1]];
 				let on = { nick: args[2][0], color: args[2][1], sid: b.sid, home: b.home };
-				let nn = { nick: args[3][1], color: args[3][1], sid: b.sid, home: b.home };
+				let nn = { nick: args[3][0], color: args[3][1], sid: b.sid, home: b.home };
 				t.printMsg({
 					sid: "system", html: true, time: args[4],
-					content:nickHTML(on).outerHTML+"<em> now known as </em>"+nickHTML(nn).outerHTML
+					content:nickHTML(on).outerHTML+"<em> is now known as </em>"+nickHTML(nn).outerHTML
 				});
 			}
 			case "USER_UPDATE": {
@@ -463,7 +542,7 @@ class Connection {
 						let nn = { nick: b.new_nick, color: b.new_color, sid: b.sid, home: b.home };
 						t.printMsg({
 							sid: "system", html: true, time: b.ts,
-							content:nickHTML(on).outerHTML+"<em> now known as </em>"+nickHTML(nn).outerHTML
+							content:nickHTML(on).outerHTML+"<em> is now known as </em>"+nickHTML(nn).outerHTML
 						});
 					}; break
 					case "message": {
@@ -510,13 +589,26 @@ class Connection {
 		this.#tabs.push(t);
 
 		t.name = (this.#name ? this.#name+" - #" : "#") + room_name;
+		t.canSend = true;
+		t.onMessage = (str) => {
+			let r = this.#tabs.findIndex(e=>e==t);
+			return this.send_event("MESSAGE", r, str);
+		}
+		t.onTyping = (b) => {
+			let r = this.#tabs.findIndex(e=>e==t);
+			this.send_event("TYPING", r, b);
+		}
+		t.onClose = () => {
+			let r = this.#tabs.findIndex(e=>e==t);
+			this.send_event("ROOM_LEAVE", r);
+		}
 		return t;
 	}
 }
 
 const the_user = ["test", "#7a19ef"];
 
-const default_ws_url = localStorage.ws_url ? new URL(localStorage.ws_url) : new URL("ws",location.href);
+const default_ws_url = localStorage.ws_url ? new URL(localStorage.ws_url) : new URL("/ws",location.href);
 const default_connection = new Connection(default_ws_url, "default");
 default_connection.createTab("lobby").focus();
 
@@ -529,9 +621,9 @@ duckhash();
 default_connection.connect();
 
 Object.assign(window, {
-	SimplePeer, tw,
+	SimplePeer, CBOR, tw,
 	acSetActive, acUpdate, acTrigger, ac_triggers,
 	tabs, Tab,
 	formatMsg, nickHTML,
-	Connection, default_connection
+	Connection, connections, default_connection
 });
