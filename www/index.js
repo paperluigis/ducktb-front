@@ -1,5 +1,5 @@
 // imports
-import { nickChangeDialog } from "./dialogs.js";
+import { nickChangeDialog, roomCreateDialog } from "./dialogs.js";
 
 import SimplePeer from "https://esm.sh/simple-peer@9";
 import CBOR from "https://esm.sh/cbor-js@0.1.0";
@@ -175,8 +175,10 @@ ui_nickbtn.addEventListener("click", async ()=>{
 ui_tab_closebtn.addEventListener("click", ()=>{
 	Tab.focused.close();
 });
-ui_tab_createbtn.addEventListener("click", ()=>{
-
+ui_tab_createbtn.addEventListener("click", async ()=>{
+	let a = await roomCreateDialog();
+	if(!a) return;
+	default_connection.createTab(a).focus();
 });
 // tabs
 const tabs = new Map();
@@ -678,7 +680,7 @@ window.addEventListener("hashchange", duckhash);
 duckhash();
 
 Object.assign(window, {
-	nickChangeDialog,
+	nickChangeDialog, roomCreateDialog,
 	SimplePeer, CBOR, tw,
 	acSetActive, acUpdate, acTrigger, ac_triggers,
 	tabs, Tab,

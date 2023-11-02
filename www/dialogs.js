@@ -30,3 +30,24 @@ export function nickChangeDialog(cancellable, nick, color) {
 		ct.addEventListener("cancel", cancellable ? () => r(null) : e=>e.preventDefault());
 	});
 }
+
+export function roomCreateDialog() {
+	let ct = document.createElement("dialog");
+	document.body.appendChild(ct);
+	ct.innerHTML = `
+Create/join a room
+<input class="prompt_input block a1" maxlength="40" placeholder="room name">
+<div class="prompt_buttons"><button class="a2">OK</button><button class="a3">Cancel</button></div>`;
+	let a1 = ct.querySelector(".a1");
+	let a2 = ct.querySelector(".a2");
+	let a3 = ct.querySelector(".a3");
+	ct.addEventListener("close", () => ct.remove());
+	a1.addEventListener("input", () => a2.disabled = !a1.value.trim() );
+	a2.disabled = !a1.value.trim();
+	ct.showModal();
+	return new Promise(r => {
+		a2.addEventListener("click", () => { ct.close(); r(a1.value) });
+		a3.addEventListener("click", () => { ct.close(); r(null) });
+		ct.addEventListener("cancel", () => r(null));
+	});
+}
