@@ -150,6 +150,7 @@ class Tab {
 	#id = "";
 	#name = "";
 	#users = {};
+	#scrollEnd = true;
 	#el;
 	static #previous;
 	static #focused;
@@ -180,7 +181,9 @@ class Tab {
 		ui_tabbar.appendChild(opt);
 		ui_tabbar.appendChild(optlabel);
 		this.#el = { tabelt, scroll, infos, opt, optlabel };
-
+		scroll.addEventListener("scroll", function() {
+			this.#scrollEnd = (scroll.scrollHeight - (scroll.scrollTop + scroll.clientHeight)) < 1;
+		});
 		opt.addEventListener("change", () => {
 			if(!opt.checked) return;
 			this.focus();
@@ -195,6 +198,7 @@ class Tab {
 		}
 		return tab;
 	}
+	get users() { return this.#users; }
 	get id() { return this.#id }
 	get name() { return this.#name; }
 	set name(x) {
@@ -206,6 +210,7 @@ class Tab {
 		return tabs.get(this.#id) != this;
 	}
 	close() {
+		this.onClose();
 		tabs.delete(this.#id);
 		this.#el.tabelt.remove();
 		this.#el.opt.remove();
@@ -230,23 +235,55 @@ class Tab {
 	}
 
 	updateUsers(data) {
-		// TODO: parse
-		// TODO: ui
+		this.#el.infos.innerHTML = `<em>ONLINE - ${data.length}</em>`;
+		this.#users = {};
+		for(let user of data) {
+			this.#users[user.sid] = user;
+			this.#el.infos.appendChild(nickHTML(user));
+		}
 	}
 	printMsg(data) {
-		// TODO: parse
-		// TODO: ui
+		let line = document.createElement("span");
+		line.className = "line";
+		let user = data._user || (data.sid == "system" ? { nick: "<system>",
+			color: "#0f0",
+			home: "local",
+			sid: "system"
+		} : users[data.sid]);
+		let ltime = document.createElement("span");
+		ltime.className = "time";
+		ltime.textContent = (new Date(data.time)).toTimeString().split(" ")[0];
+		line.appendChild(ltime);
+		line.appendChild(nickHTML(user));
+		let lcontent = document.createElement("span");
+		lcontent.className = "msg";
+		lcontent.innerHTML = `<div class="msg_ctx">${data.html ? data.content : formatMsg(data.content)}</div>`;
+		twemoji.parse(lcontent, tw_options);
+		line.appendChild(lcontent);
+		this.#el.scroll.appendChild(line);
+		this.scrollDown();
+		for(let a of line.querySelectorAll("img")) a.addEventListener("load", ()=>this.scrollDown());
 	}
 	clearChat() {
-		// TODO: ui duh
+		this.#el.scroll.textContent = "";
 	}
 	scrollDown(force=false) {
-		// TODO: ui BRUH
+		if(force||this.#scrollEnd) this.#el.scrollTop = this.#el.scrollHeight;
 	}
 
 	// event handlers
 	onMessage = (message) => {};
 	onTyping = (is_typing) => {};
+	onClose = () => {}
+}
+function nickHTML(data) {
+	let w = document.createElement("span");
+	w.className = "nick";
+	w.style.color = data.color;
+	w.textContent = data.nick;
+	w.dataset.sid = data.sid;
+	w.dataset.home = data.home;
+	return w;
 }
 function formatMsg(a) {
 	function shtml(a) {
@@ -377,27 +414,67 @@ class Connection {
 	}
 	#handle_event(name, args) {
 		switch(name) {
-			case "USER_JOINED": {}; break;
-			case "USER_LEFT": {}; break;
-			case "USER_UPDATE": {}; break;
+			case "USER_JOINED": {
+				let t = this.#tabs[args[0]];
+				t.printMsg({
+					sid: "system", html: true, time: args[2],
+					content: nickHTML(args[1]).outerHTML+"<em> joined"
+				});
+			}; break;
+			case "USER_LEFT": {
+				let t = this.#tabs[args[0]];
+				t.printMsg({
+					sid: "system", html: true, time: args[2],
+					content: nickHTML(t.users[args[1]]).outerHTML+"<em> left"
+				});
+			}; break;
+			case "USER_CHANGE_NICK": {
+				let t = this.#tabs[args[0]];
+				let b = t.users[args[1]];
+				let on = { nick: args[2][0], color: args[2][1], sid: b.sid, home: b.home };
+				let nn = { nick: args[3][1], color: args[3][1], sid: b.sid, home: b.home };
+				t.printMsg({
+					sid: "system", html: true, time: args[4],
+					content:nickHTML(on).outerHTML+"<em> now known as </em>"+nickHTML(nn).outerHTML
+				});
+			}
+			case "USER_UPDATE": {
+				let t = this.#tabs[args[0]];
+				t.updateUsers(args[1]);
+			}; break;
 			case "HISTORY": {
 				let t = this.#tabs[args[0]];
+				t.clearChat();
 				for(let b of args[1]) switch(b.type) {
 					case "join": {
-						console.log(b);
+						t.printMsg({
+							sid: "system", html: true, time: b.ts,
+							content: nickHTML(b).outerHTML+"<em> joined"
+						});
 					}; break
 					case "leave": {
-						console.log(b);
+						t.printMsg({
+							sid: "system", html: true, time: b.ts,
+							content:nickHTML(b).outerHTML+"<em> left"
+						});
 					}; break
 					case "chnick": {
-						console.log(b);
+						let on = { nick: b.old_nick, color: b.old_color, sid: b.sid, home: b.home };
+						let nn = { nick: b.new_nick, color: b.new_color, sid: b.sid, home: b.home };
+						t.printMsg({
+							sid: "system", html: true, time: b.ts,
+							content:nickHTML(on).outerHTML+"<em> now known as </em>"+nickHTML(nn).outerHTML
+						});
 					}; break
 					case "message": {
-						console.log(b);
+						t.printMsg({ sid: b.sid, _user: b, time: b.ts, content: b.content });
 					}; break
 				}
 			}; break;
-			case "MESSAGE": {}; break;
+			case "MESSAGE": {
+				let t = this.#tabs[args[0]];
+				t.printMsg(args[1])
+			}; break;
 			case "TYPING": {}; break;
 			case "MOUSE": {}; break;
 			case "ROOM": {
@@ -408,6 +485,7 @@ class Connection {
 					return b;
 				});
 				for(let i of pt) if(this.#tabs.find(e=>e.id==i.id) == null) {
+					console.log(this.#tabs, i.id);
 					i.close();
 				}
 			}; break;
@@ -441,7 +519,6 @@ const the_user = ["test", "#7a19ef"];
 const default_ws_url = localStorage.ws_url ? new URL(localStorage.ws_url) : new URL("ws",location.href);
 const default_connection = new Connection(default_ws_url, "default");
 default_connection.createTab("lobby").focus();
-default_connection.connect();
 
 function duckhash() {
 	default_connection.createTab(location.hash.slice(1)).focus();
@@ -449,10 +526,12 @@ function duckhash() {
 window.addEventListener("hashchange", duckhash);
 duckhash();
 
+default_connection.connect();
+
 Object.assign(window, {
 	SimplePeer, tw,
 	acSetActive, acUpdate, acTrigger, ac_triggers,
 	tabs, Tab,
-	formatMsg,
+	formatMsg, nickHTML,
 	Connection, default_connection
 });

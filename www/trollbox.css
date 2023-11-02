@@ -34,6 +34,9 @@ body {
     overflow-x: hidden;
     background: var(--bg0);
 }
+.infos > * {
+	display: block;
+}
 #tabbarctr {
     grid-column-start: 1;
     grid-column-end: 3;
@@ -270,7 +273,7 @@ em {
     grid-column-end: 4;
 }
 
-.h {
+.time {
     color: #777;
 }
 
