@@ -1,5 +1,6 @@
 // imports
 import SimplePeer from "https://esm.sh/simple-peer@9";
+import CBOR from "https://esm.sh/cbor-js@0.1.0";
 import tw from "https://esm.sh/twemoji@14";
 const tw_options = {
 	folder: 'svg',
@@ -18,7 +19,9 @@ const tw_options = {
 
 // dom elements
 const ui_input = document.querySelector("#input");
-const ui_tab_container = document.querySelector("#tabctr");
+const ui_tabctr = document.querySelector("#tabctr");
+const ui_tabbar = document.querySelector("#tabbar");
+const ui_tab_placeholder = document.querySelector("#tab_placeholder");
 
 // emoji map
 let emojimap = {};
@@ -148,6 +151,8 @@ class Tab {
 	#name = "";
 	#users = {};
 	#el;
+	static #previous;
+	static #focused;
 	static #creating = false;
 	constructor(id) {
 		if(!Tab.#creating)
@@ -157,24 +162,29 @@ class Tab {
 		// TODO: ui
 		let tabelt = document.createElement("div");
 		tabelt.className = "tab";
-		tabelt.id = "tab_" + name;
+		tabelt.id = "tab_" + id;
 		let scroll = document.createElement("div");
 		scroll.className = "scroll";
 		tabelt.appendChild(scroll);
 		let infos = document.createElement("div");
 		infos.className = "infos";
 		tabelt.appendChild(infos);
-		tabctr.appendChild(tabelt);
+		ui_tabctr.appendChild(tabelt);
 		let opt = document.createElement("input");
 		opt.type = "radio";
 		opt.name = "tabsel";
-		opt.id = "tsel_" + name;
+		opt.id = "tsel_" + id;
 		let optlabel = document.createElement("label");
 		optlabel.setAttribute("for", opt.id);
 		optlabel.textContent = name;
-		tabbar.appendChild(opt);
-		tabbar.appendChild(optlabel);
+		ui_tabbar.appendChild(opt);
+		ui_tabbar.appendChild(optlabel);
 		this.#el = { tabelt, scroll, infos, opt, optlabel };
+
+		opt.addEventListener("change", () => {
+			if(!opt.checked) return;
+			this.focus();
+		});
 	}
 	static create(id) {
 		let tab = tabs.get(id);
@@ -185,10 +195,11 @@ class Tab {
 		}
 		return tab;
 	}
+	get id() { return this.#id }
 	get name() { return this.#name; }
 	set name(x) {
 		this.#name = x;
-		// TODO: ui
+		this.#el.optlabel.textContent = x;
 	}
 
 	get closed() {
@@ -196,7 +207,26 @@ class Tab {
 	}
 	close() {
 		tabs.delete(this.#id);
-		// TODO: ui
+		this.#el.tabelt.remove();
+		this.#el.opt.remove();
+		this.#el.optlabel.remove();
+		let fte = tabs.values().next().value;
+		switch(false) {
+			case Tab.#previous?.closed:
+				Tab.#previous.focus(); break
+			case fte?.closed:
+				fte.focus(); break
+			default:
+				ui_tab_placeholder.classList.add("visible");
+		}
+	}
+	focus() {
+		this.#el.opt.checked = true;
+
+		Tab.#previous = Tab.#focused;
+		Tab.#focused = this;
+		(Tab.#previous?.closed === false ? Tab.#previous.#el.tabelt : ui_tab_placeholder).classList.remove("visible");
+		Tab.#focused.#el.tabelt.classList.add("visible");
 	}
 
 	updateUsers(data) {
@@ -218,18 +248,211 @@ class Tab {
 	onMessage = (message) => {};
 	onTyping = (is_typing) => {};
 }
-
-function createTab(id) {
-	let tab = tabs.get(id);
-	if(!tab) {
-		tab = new Tab(tab_duck, id);
-		tabs.set(id, tab);
+function formatMsg(a) {
+	function shtml(a) {
+		return a
+			.replaceAll("&", "&amp;")
+			.replaceAll("<", "&lt;")
+			.replaceAll('"', "&quot;");
 	}
-	return tab;
+	// undoes replacements done by shtml
+	function uhtml(a) {
+		return a
+			.replaceAll("&amp;", "&")
+			.replaceAll("&lt;", "<")
+			.replaceAll("&quot;", '"');
+	}
+	function unmdhtml(a){
+		return a
+			.replaceAll("_", "&#95;")
+			.replaceAll("*", "&#42;")
+			.replaceAll("~", "&#126;")
+			.replaceAll(":", "&#58;")
+			.replaceAll("\\", "&#92;");
+	}
+	return shtml(a)
+		.replace(/(\\)?(!)?\[(.+?)\]\((.+?)\)/gs, function (entire, escape, img, alt, src) {
+			if (escape) return entire.slice(1);
+			let e;
+			try {
+				e = new URL(uhtml(src));
+				if (e.protocol != "http:" && e.protocol != "https:" && (img && e.protocol != "data:")) return entire
+			} catch (e) {
+				return entire
+			}
+			let bsrc = src.split(" ");
+			let ealt = unmdhtml(alt),
+			esrc = unmdhtml(shtml(src));
+			let psrc = unmdhtml("https://external-content.duckduckgo.com/iu/?u="+encodeURIComponent(e));
+			return img ? `<img src="${e.protocol=="data:"?esrc:psrc}" alt="${ealt}">` : `<a href="${esrc}" target="_blank">${alt}</a>`
+		})
+		//.replace(/\b((?:https?:\/\/|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?]))/gi, function(duck) {
+		//.replace(/(?:https?:\/\/)(?:[a-z0-9-]+\.)*[a-z0-9]+(?:\/[-a-z0-9+$@#\\/%?=~_()|!:,.;]*(?:[-A-Za-z0-9+$@#\\/%=~_()|](?:&(?:\w+;)?)?)+)?/gi, function(duck) {
+		.replace(/(?:https?:\/\/)(?:[a-z0-9-]+\.)*[a-z0-9]+(?:[-a-z0-9+$@#\/%?=~_()|!:,.;]|&amp;)+(?:[-a-z0-9+$@#\/%=~_()|]|&amp;)/gi, function(duck) {
+			try {
+				let e = new URL(duck);
+				if (e.protocol != "http:" && e.protocol != "https:" && (img && e.protocol != "data:"))
+					return unmdhtml(duck);
+				let be = unmdhtml(""+e);
+				return `<a href="${be}" target="_blank">${be}</a>`;
+			} catch (e) {
+				return unmdhtml(duck)
+			}
+		})
+		.replace(/```(?:(\w+)\n)?(.+?)```|`(.+?)`/gs, function(entire, language, block, inline) {
+			if(inline) return `<code>${unmdhtml(inline)}</code>`;
+			else if(block) return `<pre>${unmdhtml(block)}</pre>`;
+			else return entire;
+		})
+		.replace(/^(\\)?> (.+)(\n|$)/g, function (entire, esc, ducks) {
+			if (esc) return "> " + ducks;
+			return `<div style="border-left: .75ch solid #144; padding-left: 1.25ch">${ducks}</div>`;
+		})
+		.replace(/(\\)?:(\w+?):/g, function (entire, esc, ducks) {
+			if (esc) return `:${ducks}:`;
+			return emojimap[ducks[0]]?.[ducks] || entire;
+		})
+		.replace(/([^\\]|^)\*\*(.+?[^\\])\*\*/gs, "$1<b>$2</b>")
+		.replace(/([^\\]|^)\*(.+?[^\\])\*/gs, "$1<i>$2</i>")
+		.replace(/([^\\]|^)__(.+?[^\\])__/gs, "$1<u>$2</u>")
+		.replace(/([^\\]|^)_(.+?[^\\])_/gs, "$1<i>$2</i>")
+		.replace(/([^\\]|^)~~(.+?[^\\])~~/gs, "$1<s>$2</s>")
+		.replace(/\\\*/g, "*")
+		.replace(/\\\*\*/g, "**")
+		.replace(/\\_/g, "_")
+		.replace(/\\__/g, "__")
+		.replace(/\\~~/g, "~~")
+		.replace(/\\\\/g, "\\")
 }
+
+
+class Connection {
+	#rate_max;
+	#rate_cur = {message:0,typing:0,room:0,mouse:0};
+	#rate_reset;
+	#uri;
+	#name;
+	#userid;
+	#id;
+	#ws;
+	#reconn;
+	#tabs = [];
+	constructor(uri, id, name) {
+		this.#uri = new URL(uri);
+		this.#id = id;
+		this.#name = name==null ? null : ""+name;
+		this.#uri.protocol = this.#uri.protocol.replace("http", "ws");
+	}
+	connect() {
+		clearTimeout(this.#reconn);
+		this.#ws = new WebSocket(this.#uri, "json-v2");
+		this.#ws.addEventListener("open", ()=>{
+			this.#rate_reset = setInterval(()=>{
+				for(let i in this.#rate_cur) this.#rate_cur[i] = 0;
+			}, 5100); // overshoot a little
+		});
+		this.#ws.addEventListener("close", ()=>{
+			this.#reconn = setTimeout(()=>this.connect(), 5000);
+			clearInterval(this.#rate_reset);
+		});
+		this.#ws.addEventListener("message", (b)=>{
+			if(typeof b.data == "string") {
+				let x = b.data.search("\0");
+				let a = b.data.slice(0,x);
+				let j = JSON.parse(b.data.slice(x+1));
+				this.#handle_event(a, j);
+			}
+		});
+		return new Promise((r,j)=>{
+			this.#ws.addEventListener("open",()=>r());
+			this.#ws.addEventListener("close",()=>j());
+		});
+	}
+	disconnect() {
+		this.#ws.close();
+		clearTimeout(this.#reconn);
+	}
+	send_event(name, ...args) {
+		this.#ws.send(`${name}\0${JSON.stringify(args)}`);
+	}
+	#handle_event(name, args) {
+		switch(name) {
+			case "USER_JOINED": {}; break;
+			case "USER_LEFT": {}; break;
+			case "USER_UPDATE": {}; break;
+			case "HISTORY": {
+				let t = this.#tabs[args[0]];
+				for(let b of args[1]) switch(b.type) {
+					case "join": {
+						console.log(b);
+					}; break
+					case "leave": {
+						console.log(b);
+					}; break
+					case "chnick": {
+						console.log(b);
+					}; break
+					case "message": {
+						console.log(b);
+					}; break
+				}
+			}; break;
+			case "MESSAGE": {}; break;
+			case "TYPING": {}; break;
+			case "MOUSE": {}; break;
+			case "ROOM": {
+				let pt = this.#tabs;
+				this.#tabs = args[0].map(e=>{
+					let b = Tab.create(this.#id+"-"+e);
+					b.name = (this.#name ? this.#name+" - #" : "#") + e;
+					return b;
+				});
+				for(let i of pt) if(this.#tabs.find(e=>e.id==i.id) == null) {
+					i.close();
+				}
+			}; break;
+			case "RATE_LIMITS": {
+				this.#rate_max = args[0];
+			}; break;
+			case "HELLO": {
+				console.log(`connected to ${this.#uri} -- ${args[0]}`);
+				this.#userid = args[1];
+				this.send_event("USER_JOINED", the_user[0], the_user[1], this.#tabs.map(e=>e.id.slice(this.id.length+1)));
+			}; break;
+		}
+	}
+	get name() { return this.#name; }
+	get uri() { return this.#uri; }
+	get id() { return this.#id; }
+	get uid() { return this.#userid; }
+	createTab(room_name) {
+		room_name = room_name.trim();
+		let t = Tab.create(this.#id+"-"+room_name);
+		if(this.#tabs.includes(t)) return;
+		this.#tabs.push(t);
+
+		t.name = (this.#name ? this.#name+" - #" : "#") + room_name;
+		return t;
+	}
+}
+
+const the_user = ["test", "#7a19ef"];
+
+const default_ws_url = localStorage.ws_url ? new URL(localStorage.ws_url) : new URL("ws",location.href);
+const default_connection = new Connection(default_ws_url, "default");
+default_connection.createTab("lobby").focus();
+default_connection.connect();
+
+function duckhash() {
+	default_connection.createTab(location.hash.slice(1)).focus();
+}
+window.addEventListener("hashchange", duckhash);
+duckhash();
 
 Object.assign(window, {
 	SimplePeer, tw,
 	acSetActive, acUpdate, acTrigger, ac_triggers,
-	tabs, Tab, createTab
+	tabs, Tab,
+	formatMsg,
+	Connection, default_connection
 });

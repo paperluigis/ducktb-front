@@ -1,8 +1,6 @@
 function s_send(type, ...arg) {
     socket?.send?.(`${type}\0${JSON.stringify(arg)}`);
 }
-let ws_url = localStorage.ws_url ? new URL(localStorage.ws_url) : new URL("ws",location.href);
-ws_url.protocol = ws_url.protocol.replace("http", "ws");
 
 function s_connect() {
     socket = new WebSocket(ws_url);
@@ -369,82 +367,6 @@ function printNick(data, l) {
 }
 
 let throttle_mouse = false, throttle_mouse_i;
-function formatMsg(a) {
-	function shtml(a) {
-		return a
-			.replaceAll("&", "&amp;")
-			.replaceAll("<", "&lt;")
-			.replaceAll('"', "&quot;");
-	}
-	// undoes replacements done by shtml
-	function uhtml(a) {
-		return a
-			.replaceAll("&amp;", "&")
-			.replaceAll("&lt;", "<")
-			.replaceAll("&quot;", '"');
-	}
-	function unmdhtml(a){
-		return a
-			.replaceAll("_", "&#95;")
-			.replaceAll("*", "&#42;")
-			.replaceAll("~", "&#126;")
-			.replaceAll(":", "&#58;")
-			.replaceAll("\\", "&#92;");
-	}
-	return shtml(a)
-		.replace(/(\\)?(!)?\[(.+?)\]\((.+?)\)/gs, function (entire, escape, img, alt, src) {
-			if (escape) return entire.slice(1);
-			let e;
-			try {
-				e = new URL(uhtml(src));
-				if (e.protocol != "http:" && e.protocol != "https:" && (img && e.protocol != "data:")) return entire
-			} catch (e) {
-				return entire
-			}
-			let bsrc = src.split(" ");
-			let ealt = unmdhtml(alt),
-			esrc = unmdhtml(shtml(src));
-			let psrc = unmdhtml("https://external-content.duckduckgo.com/iu/?u="+encodeURIComponent(e));
-			return img ? `<img src="${e.protocol=="data:"?esrc:psrc}" alt="${ealt}">` : `<a href="${esrc}" target="_blank">${alt}</a>`
-		})
-		//.replace(/\b((?:https?:\/\/|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?]))/gi, function(duck) {
-		//.replace(/(?:https?:\/\/)(?:[a-z0-9-]+\.)*[a-z0-9]+(?:\/[-a-z0-9+$@#\\/%?=~_()|!:,.;]*(?:[-A-Za-z0-9+$@#\\/%=~_()|](?:&(?:\w+;)?)?)+)?/gi, function(duck) {
-		.replace(/(?:https?:\/\/)(?:[a-z0-9-]+\.)*[a-z0-9]+(?:[-a-z0-9+$@#\/%?=~_()|!:,.;]|&amp;)+(?:[-a-z0-9+$@#\/%=~_()|]|&amp;)/gi, function(duck) {
-			try {
-				let e = new URL(duck);
-				if (e.protocol != "http:" && e.protocol != "https:" && (img && e.protocol != "data:"))
-					return unmdhtml(duck);
-				let be = unmdhtml(""+e);
-				return `<a href="${be}" target="_blank">${be}</a>`;
-			} catch (e) {
-				return unmdhtml(duck)
-			}
-		})
-		.replace(/```(?:(\w+)\n)?(.+?)```|`(.+?)`/gs, function(entire, language, block, inline) {
-			if(inline) return `<code>${unmdhtml(inline)}</code>`;
-			else if(block) return `<pre>${unmdhtml(block)}</pre>`;
-			else return entire;
-		})
-		.replace(/^(\\)?> (.+)(\n|$)/g, function (entire, esc, ducks) {
-			if (esc) return "> " + ducks;
-			return `<div style="border-left: .75ch solid #144; padding-left: 1.25ch">${ducks}</div>`;
-		})
-		.replace(/(\\)?:(\w+?):/g, function (entire, esc, ducks) {
-			if (esc) return `:${ducks}:`;
-			return emojimap[ducks[0]]?.[ducks] || entire;
-		})
-		.replace(/([^\\]|^)\*\*(.+?[^\\])\*\*/gs, "$1<b>$2</b>")
-		.replace(/([^\\]|^)\*(.+?[^\\])\*/gs, "$1<i>$2</i>")
-		.replace(/([^\\]|^)__(.+?[^\\])__/gs, "$1<u>$2</u>")
-		.replace(/([^\\]|^)_(.+?[^\\])_/gs, "$1<i>$2</i>")
-		.replace(/([^\\]|^)~~(.+?[^\\])~~/gs, "$1<s>$2</s>")
-		.replace(/\\\*/g, "*")
-		.replace(/\\\*\*/g, "**")
-		.replace(/\\_/g, "_")
-		.replace(/\\__/g, "__")
-		.replace(/\\~~/g, "~~")
-		.replace(/\\\\/g, "\\")
-}
 
 
 let not_typing, can_sus, too_fast;
