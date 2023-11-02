@@ -1,8 +1,9 @@
 // imports
 import { nickChangeDialog, roomCreateDialog } from "./dialogs.js";
 
+import HighlightJS from "https://esm.sh/highlight.js";
 import SimplePeer from "https://esm.sh/simple-peer@9";
-import CBOR from "https://esm.sh/cbor-js@0.1.0";
+import CBOR from "https://esm.sh/cbor-js";
 import tw from "https://esm.sh/twemoji@14";
 const tw_options = {
 	folder: 'svg',
@@ -425,7 +426,13 @@ function formatMsg(a) {
 		})
 		.replace(/```(?:(\w+)\n)?(.+?)```|`(.+?)`/gs, function(entire, language, block, inline) {
 			if(inline) return `<code>${unmdhtml(inline)}</code>`;
-			else if(block) return `<pre>${unmdhtml(block)}</pre>`;
+			else if(block) {
+				if(language) try {
+					let sus = HighlightJS.highlight(uhtml(block), { language }).value
+					return `<pre class="hljs">${unmdhtml(sus)}</pre>`;
+				} catch {}
+				return `<pre>${unmdhtml(block)}</pre>`;
+			}
 			else return entire;
 		})
 		.replace(/^(\\)?> (.+)(\n|$)/g, function (entire, esc, ducks) {
@@ -681,7 +688,7 @@ duckhash();
 
 Object.assign(window, {
 	nickChangeDialog, roomCreateDialog,
-	SimplePeer, CBOR, tw,
+	HighlightJS, SimplePeer, CBOR, tw,
 	acSetActive, acUpdate, acTrigger, ac_triggers,
 	tabs, Tab,
 	formatMsg, nickHTML,
