@@ -277,6 +277,7 @@ class Tab {
 		}
 	}
 	focus() {
+		if(this.closed) return;
 		if(Tab.#focused != this) {
 			this.#el.opt.checked = true;
 			Tab.#previous = Tab.#focused;
@@ -466,7 +467,7 @@ class Connection {
 	#userid;
 	#id;
 	#ws;
-	#reconn;
+	#reconn = 0;
 	#tabs = [];
 	#c_nick = "duck";
 	#c_color = "#a3e130";
@@ -481,13 +482,18 @@ class Connection {
 	}
 	connect() {
 		clearTimeout(this.#reconn);
+		this.#reconn = 0;
 		this.#ws = new WebSocket(this.#uri, "json-v2");
 		this.#ws.addEventListener("open", ()=>{
 			this.#rate_reset_timer = setInterval(()=>this.#rate_reset(), 5100); // overshoot a little
 		});
 		this.#ws.addEventListener("close", ()=>{
-			this.#reconn = setTimeout(()=>this.connect(), 5000);
+			if(this.#reconn != -1) this.#reconn = setTimeout(()=>this.connect(), 5000);
 			clearInterval(this.#rate_reset_timer);
+			for(let t of this.#tabs) {
+				t.canSend = false;
+				t.printMsg({ sid: "system", content: "Whoops, we got disconnected.", time: Date.now() });
+			}
 		});
 		this.#ws.addEventListener("message", (b)=>{
 			if(typeof b.data == "string") {
@@ -505,6 +511,7 @@ class Connection {
 	disconnect() {
 		this.#ws.close();
 		clearTimeout(this.#reconn);
+		this.#reconn = -1;
 	}
 	#map_ratelimit_buckets(name) {
 		let qe = null;
@@ -531,7 +538,6 @@ class Connection {
 		for(let i of Object.keys(this.#rate_cur)) this.#rate_cur[i] = 0;
 		for(let t of this.#tabs) t.canSend = true;
 		for(let [b,e] of Object.entries(this.#event_queue)) {
-			console.log(b, ...e);
 			while(e.length && this.send_event(...e.shift()));
 			if(!e.length) delete this.#event_queue[b];
 		}
@@ -621,19 +627,21 @@ class Connection {
 			case "MOUSE": {}; break;
 			case "ROOM": {
 				let pt = this.#tabs;
+				let fc = Tab.focused;
 				this.#tabs = args[0].map(e=>{
 					let b = Tab.create(this.#id+"-"+e);
 					b.name = (this.#name ? this.#name+" - #" : "#") + e;
 					return b;
 				});
 				for(let i of pt) if(this.#tabs.find(e=>e.id==i.id) == null) {
-					console.log(this.#tabs, i.id);
 					i.close();
 				}
+				fc.focus();
 				localStorage["rooms-"+this.#id] = JSON.stringify(this.#tabs.map(e=>e.id.slice(this.id.length+1)));
 			}; break;
 			case "RATE_LIMITS": {
 				this.#rate_max = args[0];
+				this.#rate_reset();
 			}; break;
 			case "HELLO": {
 				console.log(`connected to ${this.#uri} -- ${args[0]}`);
@@ -705,4 +713,5 @@ if(localStorage.user_pseudo == null) {
 ui_nickbtn.textContent = username[0];
 
 default_connection.connect();
+
 
