@@ -26,8 +26,8 @@ export class Tab {
 	#scrollEnd = true;
 	#canSend = false;
 	#canType = true;
+	#canClose = true;
 	#el;
-	static #previous;
 	static #focused;
 	static #creating = false;
 	constructor(id) {
@@ -55,7 +55,11 @@ export class Tab {
 		optlabel.textContent = name;
 		ele.tabbar.appendChild(opt);
 		ele.tabbar.appendChild(optlabel);
-		this.#el = { tabelt, scroll, infos, opt, optlabel };
+		let mice = document.createElement("div");
+		mice.className = "mice";
+		mice.id = "mice_" + id;
+		ele.micectr.appendChild(mice);
+		this.#el = { tabelt, scroll, infos, opt, optlabel, mice };
 		scroll.addEventListener("scroll", () => {
 			this.#scrollEnd = (scroll.scrollHeight - (scroll.scrollTop + scroll.clientHeight)) < 1;
 		});
@@ -77,9 +81,10 @@ export class Tab {
 	get users() { return this.#users; }
 	get id() { return this.#id }
 	get name() { return this.#name; }
+	#unreadMsgCount = 0;
 	set name(x) {
 		this.#name = x;
-		this.#el.optlabel.textContent = x;
+		this.#el.optlabel.textContent = this.#unreadMsgCount ? `${x} (${this.#unreadMsgCount})` : x;
 	}
 	set canType(x) {
 		this.#canType = x;
@@ -89,7 +94,10 @@ export class Tab {
 		this.#canSend = x;
 		if(this == Tab.focused) { this.focus() }
 	}
-
+	set canClose(x) {
+		this.#canClose = x;
+		if(this == Tab.focused) { this.focus() }
+	}
 	get closed() {
 		return tabs.get(this.#id) != this;
 	}
@@ -97,12 +105,11 @@ export class Tab {
 		this.onClose();
 		tabs.delete(this.#id);
 		this.#el.tabelt.remove();
+		this.#el.mice.remove();
 		this.#el.opt.remove();
 		this.#el.optlabel.remove();
 		let fte = tabs.values().next().value;
 		switch(false) {
-			case Tab.#previous?.closed:
-				Tab.#previous.focus(); break
 			case fte?.closed:
 				fte.focus(); break
 			default:
@@ -113,11 +120,13 @@ export class Tab {
 		if(this.closed) return;
 		if(Tab.#focused != this) {
 			this.#el.opt.checked = true;
-			Tab.#previous = Tab.#focused;
+			Tab.#focused?.ui_handle_mouse();
 			Tab.#focused = this;
-			(Tab.#previous?.closed === false ? Tab.#previous.#el.tabelt : ele.tab_placeholder).classList.remove("visible");
+			for(let e of document.querySelectorAll(".tab.visible, .mice.visible")) e.classList.remove("visible");
 			Tab.#focused.#el.tabelt.classList.add("visible");
+			Tab.#focused.#el.mice.classList.add("visible");
 		}
+		ele.tab_closebtn.disabled = !this.#canClose;
 		ele.input.disabled = !this.#canType;
 		ele.sendbtn.disabled = !this.#canSend || !validate_string(ele.input.value);
 		ele.typing_users.textContent = "";
@@ -128,6 +137,9 @@ export class Tab {
 			ele.typing_users.appendChild(tn=document.createTextNode(", "));
 		}
 		if(tn) tn.textContent = this.#typing.length > 1 ? " are typing…" : " is typing…";
+		this.#unreadMsgCount = 0;
+		this.name += "";
+		this.scrollDown();
 	}
 
 	updateTyping(data) {
@@ -141,8 +153,13 @@ export class Tab {
 			this.#users[user.sid] = user;
 			this.#el.infos.appendChild(nickHTML(user));
 		}
+		for(let [i, sus] of Object.entries(this.#mice)) {
+			if(this.#users[i]) continue;
+			sus.remove();
+			delete this.#mice[i];
+		}
 	}
-	printMsg(data) {
+	printMsg(data, countUnread) {
 		let line = document.createElement("span");
 		line.className = "line";
 		let user = data._user || (data.sid == "system" ? { nick: "<system>",
@@ -163,12 +180,30 @@ export class Tab {
 		this.#el.scroll.appendChild(line);
 		this.scrollDown();
 		for(let a of line.querySelectorAll("img")) a.addEventListener("load", ()=>this.scrollDown());
+		if(countUnread && Tab.focused != this) { this.#unreadMsgCount++; this.name += "" }
+	}
+	#mice = {};
+	moveMouse(uid, x, y) {
+		if(!this.#users[uid]) return;
+		let mouse = this.#mice[uid];
+		if(!mouse) {
+			mouse = document.createElement("div");
+			mouse.className = "mouse";
+			mouse.id = "mouse-"+uid;
+			mouse.appendChild(document.createElement("span"));
+			this.#el.mice.appendChild(mouse);
+			this.#mice[uid] = mouse;
+		}
+		mouse.children[0].textContent = this.#users[uid].nick;
+		mouse.children[0].style.color = this.#users[uid].color;
+		mouse.style.left = x * 100 + "%";
+		mouse.style.top = y * 100 + "%";
 	}
 	clearChat() {
 		this.#el.scroll.textContent = "";
 	}
 	scrollDown(force=false) {
-		if(force||this.#scrollEnd) this.#el.scroll.scrollTop = this.#el.scroll.scrollHeight;
+		if(force||this.#scrollEnd) this.#el.scroll.scrollTo(0, this.#el.scroll.scrollHeight);
 	}
 
 	#isTyping = false;
@@ -192,8 +227,17 @@ export class Tab {
 		this.onTyping(false);
 		return true;
 	}
+	#mouseLast = 0;
+	ui_handle_mouse(e) {
+		if(e && performance.now() - this.#mouseLast < 75) return;
+		this.#mouseLast = performance.now();
+		if(e == null) return this.onMouse(-1, -1);
+		// limit to approximately 13.3 events per second
+		this.onMouse(e.clientX / innerWidth, e.clientY / innerHeight);
+	}
 
 	// event handlers
+	onMouse = (x, y) => {};
 	onMessage = (message) => {};
 	onTyping = (is_typing) => {};
 	onClose = () => {}

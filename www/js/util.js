@@ -49,17 +49,6 @@ export function formatMsg(a) {
 		})
 		//.replace(/\b((?:https?:\/\/|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?]))/gi, function(duck) {
 		//.replace(/(?:https?:\/\/)(?:[a-z0-9-]+\.)*[a-z0-9]+(?:\/[-a-z0-9+$@#\\/%?=~_()|!:,.;]*(?:[-A-Za-z0-9+$@#\\/%=~_()|](?:&(?:\w+;)?)?)+)?/gi, function(duck) {
-		.replace(/(?:https?:\/\/)(?:[a-z0-9-]+\.)*[a-z0-9]+(?:[-a-z0-9+$@#\/%?=~_()|!:,.;]|&amp;)+(?:[-a-z0-9+$@#\/%=~_()|]|&amp;)/gi, function(duck) {
-			try {
-				let e = new URL(duck);
-				if (e.protocol != "http:" && e.protocol != "https:" && (img && e.protocol != "data:"))
-					return unmdhtml(duck);
-				let be = unmdhtml(""+e);
-				return `<a href="${be}" target="_blank">${be}</a>`;
-			} catch (e) {
-				return unmdhtml(duck)
-			}
-		})
 		.replace(/```(?:(\w+)\n)?(.+?)```|`(.+?)`/gs, function(entire, language, block, inline) {
 			if(inline) return `<code>${unmdhtml(inline)}</code>`;
 			else if(block) {
@@ -70,6 +59,17 @@ export function formatMsg(a) {
 				return `<pre>${unmdhtml(block)}</pre>`;
 			}
 			else return entire;
+		})
+		.replace(/(?:https?:\/\/)(?:[a-z0-9-]+\.)*[a-z0-9]+(?:[-a-z0-9+$@#\/%?=~_()|!:,.;]|&amp;)+(?:[-a-z0-9+$@#\/%=~_|]|&amp;)/gi, function(duck) {
+			try {
+				let e = new URL(duck);
+				if (e.protocol != "http:" && e.protocol != "https:" && (img && e.protocol != "data:"))
+					return unmdhtml(duck);
+				let be = unmdhtml(""+e);
+				return `<a href="${be}" target="_blank">${be}</a>`;
+			} catch (e) {
+				return unmdhtml(duck)
+			}
 		})
 		.replace(/^(\\)?> (.+)(\n|$)/g, function (entire, esc, ducks) {
 			if (esc) return "> " + ducks;

@@ -95,7 +95,7 @@ body {
 .tab {
 	display: none;
 }
-#tabctr, .tab.visible {
+#tabctr, .tab.visible, .mice.visible {
     display: contents;
 }
 #input, #nick_btn, #send, #autocomp_bar, .infos, .scroll, #tabbarctr>*, #typing_users {
@@ -314,7 +314,7 @@ b {
     color: var(--bg1);
 }
 
-#mice {
+#micectr {
     z-index: 63;
     width: 100vw;
     height: 100vh;
@@ -322,6 +322,7 @@ b {
     position: fixed;
     pointer-events: none;
 }
+.mice { display: none; }
 .mouse {
     transition: top .2s linear,
                left .2s linear;

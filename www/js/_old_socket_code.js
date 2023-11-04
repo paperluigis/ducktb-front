@@ -24,18 +24,7 @@ function s_connect() {
                 let tsid = json[0];
                 if(!ss_current_tab.users[tsid] || sid == tsid) break;
                 let mouse = document.getElementById("mouse-"+tsid);
-                if(!mouse) {
-                    mouse = document.createElement("div");
-                    mouse.className = "mouse";
-                    mouse.id = "mouse-"+tsid;
-                    mouse.appendChild(document.createElement("span"));
-                    mice.appendChild(mouse);
-                }
-                mouse.children[0].textContent = ss_current_tab.users[tsid].nick;
-                mouse.children[0].style.color = ss_current_tab.users[tsid].color;
-                mouse.style.left = json[1] * 100 + "%";
-                mouse.style.top = json[2] * 100 + "%";
-            }; break;
+			}; break;
             case "TYPING": {
 				ss_current_tab.typing = json[0];
             }; break;

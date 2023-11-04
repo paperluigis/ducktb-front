@@ -13,6 +13,7 @@ export class Connection {
 	#reconn = 0;
 	#tabs = [];
 	#nickcol;
+	#connected = false;
 	#c_nick = "duck";
 	#c_color = "#a3e130";
 	constructor(uri, id, nickcol, name) {
@@ -26,6 +27,7 @@ export class Connection {
 		for(let a of JSON.parse(localStorage["rooms-"+id] || "[]")) this.createTab(a);
 	}
 	connect() {
+		if(this.#ws) return;
 		clearTimeout(this.#reconn);
 		this.#reconn = 0;
 		this.#ws = new WebSocket(this.#uri, "json-v2");
@@ -35,10 +37,12 @@ export class Connection {
 		this.#ws.addEventListener("close", ()=>{
 			if(this.#reconn != -1) this.#reconn = setTimeout(()=>this.connect(), 5000);
 			clearInterval(this.#rate_reset_timer);
-			for(let t of this.#tabs) {
+			this.#ws = null;
+			if(this.#connected) for(let t of this.#tabs) {
 				t.canSend = false;
 				t.printMsg({ sid: "system", content: "Whoops, we got disconnected.", time: Date.now() });
 			}
+			this.#connected = false;
 		});
 		this.#ws.addEventListener("message", (b)=>{
 			if(typeof b.data == "string") {
@@ -97,7 +101,7 @@ export class Connection {
 		return false;
 	}
 	send_event(name, ...args) {
-		if(!this.#ws || this.#ws.readyState != 1) return false;
+		if(!this.#connected) return false;
 		if(!this.rate_remaining(name, 1)) return false;
 		this.#ws.send(`${name}\0${JSON.stringify(args)}`);
 		return true;
@@ -163,13 +167,17 @@ export class Connection {
 			}; break;
 			case "MESSAGE": {
 				let t = this.#tabs[args[0]];
-				t.printMsg(args[1])
+				t.printMsg(args[1], true);
 			}; break;
 			case "TYPING": {
 				let t = this.#tabs[args[0]];
 				t.updateTyping(args[1])
 			}; break;
-			case "MOUSE": {}; break;
+			case "MOUSE": {
+				let t = this.#tabs[args[0]];
+				if(args[1] != this.#userid)
+					t.moveMouse(args[1], args[2], args[3]);
+			}; break;
 			case "ROOM": {
 				let pt = this.#tabs;
 				let fc = Tab.focused;
@@ -189,6 +197,7 @@ export class Connection {
 				this.#rate_reset();
 			}; break;
 			case "HELLO": {
+				this.#connected = true;
 				console.log(`connected to ${this.#uri} -- ${args[0]}`);
 				this.#userid = args[1];
 				this.send_event("USER_JOINED", this.#nickcol[0], this.#nickcol[1], this.#tabs.map(e=>e.id.slice(this.id.length+1)));
@@ -201,12 +210,17 @@ export class Connection {
 	get uid() { return this.#userid; }
 	createTab(room_name) {
 		room_name = room_name.trim();
+		if(!room_name) throw new Error("THAT IS NOT A VALID ROOM-ID YOU DUCK");
 		let t = Tab.create(this.#id+"-"+room_name);
 		if(this.#tabs.includes(t)) return t;
 		this.#tabs.push(t);
 
 		t.name = (this.#name ? this.#name+" - #" : "#") + room_name;
 		t.canSend = true;
+		t.onMouse = (x, y) => {
+			let r = this.#tabs.findIndex(e=>e==t);
+			return this.send_event("MOUSE", r, x, y);
+		}
 		t.onMessage = (str) => {
 			let r = this.#tabs.findIndex(e=>e==t);
 			return this.send_event("MESSAGE", r, str);
