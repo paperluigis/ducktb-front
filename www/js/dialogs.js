@@ -3,10 +3,14 @@ export function nickChangeDialog(cancellable, nick, color) {
 	document.body.appendChild(ct);
 	ct.innerHTML = `
 <input class="prompt_input block a1" maxlength="40" placeholder="nickname">
-#<input class="prompt_input a2" style="width:6ch" maxlength="6" placeholder="hex"><span class="prompt_color_input_wrapper">
+#<input class="prompt_input a2" style="width:6ch" maxlength="6" placeholder="hex">
+<span class="prompt_color_input_wrapper">
 	<input class="prompt_color_input a3" type="color">
 </span>
-<div class="prompt_buttons"><button class="a4">OK</button><button class="a5">Cancel</button></div>`;
+<div class="prompt_buttons">
+	<button class="a4">OK</button>
+	<button class="a5">Cancel</button>
+</div>`;
 	let a1 = ct.querySelector(".a1");
 	let a2 = ct.querySelector(".a2");
 	let a3 = ct.querySelector(".a3");
