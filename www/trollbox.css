@@ -23,7 +23,7 @@ body {
     gap: 8px;
     padding: 8px;
     grid-template-columns: 1fr 150px;
-    grid-template-rows: 1.5em 1fr auto;
+    grid-template-rows: auto 1fr auto;
 }
 
 .scroll,
@@ -47,6 +47,7 @@ body {
 #tabbar {
     display: flex;
     justify-content: space-around;
+	flex-wrap: wrap;
 }
 #tabbar input {
     width: 0;
@@ -258,6 +259,10 @@ em {
     opacity: 0.5;
     text-shadow: 1px 0px;
     letter-spacing: 0px;
+}
+
+.nick {
+	text-shadow: 1px 1px 1px #555;
 }
 
 #infos>.nick {

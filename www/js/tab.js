@@ -191,6 +191,7 @@ export class Tab {
 			mouse.className = "mouse";
 			mouse.id = "mouse-"+uid;
 			mouse.appendChild(document.createElement("span"));
+			mouse.children[0].className = "nick";
 			this.#el.mice.appendChild(mouse);
 			this.#mice[uid] = mouse;
 		}
