@@ -42,6 +42,9 @@ export class Tab {
 		let scroll = document.createElement("div");
 		scroll.className = "scroll";
 		tabelt.appendChild(scroll);
+		let stable = document.createElement("table");
+		stable.className = "scroll_inner";
+		scroll.appendChild(stable);
 		let infos = document.createElement("div");
 		infos.className = "infos";
 		tabelt.appendChild(infos);
@@ -59,7 +62,7 @@ export class Tab {
 		mice.className = "mice";
 		mice.id = "mice_" + id;
 		ele.micectr.appendChild(mice);
-		this.#el = { tabelt, scroll, infos, opt, optlabel, mice };
+		this.#el = { tabelt, scroll, stable, infos, opt, optlabel, mice };
 		scroll.addEventListener("scroll", () => {
 			this.#scrollEnd = (scroll.scrollHeight - (scroll.scrollTop + scroll.clientHeight)) < 1;
 		});
@@ -160,24 +163,24 @@ export class Tab {
 		}
 	}
 	printMsg(data, countUnread) {
-		let line = document.createElement("span");
+		let line = document.createElement("tr");
 		line.className = "line";
 		let user = data._user || (data.sid == "system" ? { nick: "<system>",
 			color: "#0f0",
 			home: "local",
 			sid: "system"
 		} : this.#users[data.sid]);
-		let ltime = document.createElement("span");
+		let ltime = document.createElement("td");
 		ltime.className = "time";
 		ltime.textContent = (new Date(data.time)).toTimeString().split(" ")[0];
 		line.appendChild(ltime);
-		line.appendChild(nickHTML(user));
-		let lcontent = document.createElement("span");
+		line.appendChild(nickHTML(user, "td"));
+		let lcontent = document.createElement("td");
 		lcontent.className = "msg";
 		lcontent.innerHTML = `<div class="msg_ctx">${data.html ? data.content : formatMsg(data.content)}</div>`;
 		tw.parse(lcontent, tw_options);
 		line.appendChild(lcontent);
-		this.#el.scroll.appendChild(line);
+		this.#el.stable.appendChild(line);
 		this.scrollDown();
 		for(let a of line.querySelectorAll("img")) a.addEventListener("load", ()=>this.scrollDown());
 		if(countUnread && Tab.focused != this) { this.#unreadMsgCount++; this.name += "" }
@@ -201,7 +204,7 @@ export class Tab {
 		mouse.style.top = y * 100 + "%";
 	}
 	clearChat() {
-		this.#el.scroll.textContent = "";
+		this.#el.stable.textContent = "";
 	}
 	scrollDown(force=false) {
 		if(force||this.#scrollEnd) this.#el.scroll.scrollTo(0, this.#el.scroll.scrollHeight);

@@ -64,8 +64,7 @@ body {
 	color: var(--fg1);
 }
 #tabbar label {
-    padding: 0 1ch;
-    margin: 0 .5ch;
+    padding: 0 1.5ch;
 	color: var(--fg0);
 }
 #tabctl {
@@ -261,6 +260,16 @@ em {
     letter-spacing: 0px;
 }
 
+.scroll_inner {
+	user-select: text;
+	border-spacing: 0;
+	position: sticky;
+	top: 100%;
+}
+.scroll_inner td {
+	vertical-align: top;
+}
+
 .nick {
 	text-shadow: 1px 1px 1px #555;
 }
@@ -269,10 +278,6 @@ em {
     padding-left: 7px;
 }
 
-.line {
-    display: grid;
-    grid-template-columns: 70px 80px 1fr;
-}
 .line img:not(.emoji) {
     max-width: 100%;
     max-height: 70vh;
@@ -290,19 +295,35 @@ em {
 
 .time {
     color: #777;
+	max-width: 12ch;
+	padding-right: 1ch;
 }
 
-.line>.nick {
-    border-right: var(--border0) #555;
-    text-align: right;
-    padding-right: 5px;
+.infos .nick::before {
+	float: right;
+    content: attr(data-trhome);
+	color: #777;
+}
+.line>.nick::before {
+	float: left;
+    content: attr(data-trhome);
+	color: #777;
+}
+.nick {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
 }
 
+.line>.nick {
+    border-right: var(--border0) #555;
+    text-align: right;
+    padding-right: .5ch;
+	max-width: 24ch;
+}
+
 .line>.msg {
-    padding-left: 4px;
+    padding-left: .5ch;
 }
 
 .msg_ctx {
@@ -330,6 +351,7 @@ b {
 }
 .mice { display: none; }
 .mouse {
+	opacity: .5;
     transition: top .2s linear,
                left .2s linear;
     width: 32px;
