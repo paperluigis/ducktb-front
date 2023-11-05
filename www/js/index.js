@@ -4,7 +4,7 @@ import { tabs, Tab } from "./tab.js";
 //import { commandPrompt }
 import { ac_triggers, acClear } from "./autocomplete.js";
 import { connections, Connection } from "./connection.js";
-import { nickHTML, formatMsg, validate_string } from "./util.js";
+import { nickHTML, formatMsg, validate_string } from "./util.js?1";
 import * as ele from "./ui_elements.js";
 
 import HighlightJS from "https://esm.sh/highlight.js";

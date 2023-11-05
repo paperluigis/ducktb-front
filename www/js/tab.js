@@ -1,4 +1,4 @@
-import { nickHTML, formatMsg, validate_string } from "./util.js";
+import { nickHTML, formatMsg, validate_string } from "./util.js?1";
 import * as ele from "./ui_elements.js";
 
 import tw from "https://esm.sh/twemoji@14";
