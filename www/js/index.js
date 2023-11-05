@@ -67,6 +67,25 @@ function duckhash() {
 window.addEventListener("hashchange", duckhash);
 duckhash();
 
+window.addEventListener("keydown", e=>{
+	if(!e.altKey) return;
+	let sw=0;
+	switch(e.key) {
+		case "w": ele.tab_closebtn.click(); break;
+		case "t": ele.tab_createbtn.click(); break;
+		case "ArrowLeft": sw=-1; break;
+		case "ArrowRight": sw=1; break;
+		default: return;
+	}
+	e.preventDefault();
+	if(!sw) return;
+	let sa = [...document.querySelectorAll("[name=tabsel]")];
+	let si = sa.findIndex(a=>a.checked) + sw;
+	if(si<0) si=sa.length-1;
+	if(si==sa.length) si=0;
+	sa[si].click();
+});
+
 default_connection.connect();
 
 
