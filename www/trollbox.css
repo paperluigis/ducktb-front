@@ -265,9 +265,12 @@ em {
 	border-spacing: 0;
 	position: sticky;
 	top: 100%;
+	display: grid;
+	grid-template-columns: auto auto 1fr;
 }
-.scroll_inner td {
-	vertical-align: top;
+
+.line {
+	display: contents;
 }
 
 .nick {
