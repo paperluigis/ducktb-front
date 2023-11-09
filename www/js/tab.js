@@ -24,6 +24,7 @@ export class Tab {
 	#users = {};
 	#typing = [];
 	#scrollEnd = true;
+	#canDM = false;
 	#canSend = false;
 	#canType = true;
 	#canClose = true;
@@ -88,6 +89,9 @@ export class Tab {
 	set name(x) {
 		this.#name = x;
 		this.#el.optlabel.textContent = this.#unreadMsgCount ? `${x} (${this.#unreadMsgCount})` : x;
+	}
+	set canDM(x) {
+		this.#canDM = x;
 	}
 	set canType(x) {
 		this.#canType = x;
@@ -162,14 +166,21 @@ export class Tab {
 			delete this.#mice[i];
 		}
 	}
-	printMsg(data, countUnread) {
+	printMsg(data, countUnread, dm="") {
 		let line = document.createElement("div");
 		line.className = "line";
-		let user = data._user || (data.sid == "system" ? { nick: "<system>",
+		let uid = data.sid;
+		if(dm=="t") {
+			line.classList.add("dm", "dm-send");
+			uid = data.sent_to;
+		} else if(dm=="r") {
+			line.classList.add("dm", "dm-recv");
+		}
+		let user = data._user || (uid == "system" ? { nick: "<system>",
 			color: "#0f0",
 			home: "local",
 			sid: "system"
-		} : this.#users[data.sid]);
+		} : this.#users[uid]);
 		let ltime = document.createElement("span");
 		ltime.className = "time";
 		ltime.textContent = (new Date(data.time)).toTimeString().split(" ")[0];
@@ -224,7 +235,7 @@ export class Tab {
 	}
 	ui_handle_send() {
 		if(ele.sendbtn.disabled) return false;
-		if(this.onMessage(ele.input.value.trim()) == false) return false;
+		if(this.onMessage(ele.input.value.trim(), null) == false) return false;
 		ele.input.value="";
 		this.focus();
 		this.#isTyping = false;
@@ -242,7 +253,8 @@ export class Tab {
 
 	// event handlers
 	onMouse = (x, y) => {};
-	onMessage = (message) => {};
+	// tuid is either null or a userid
+	onMessage = (message, tuid) => {};
 	onTyping = (is_typing) => {};
 	onClose = () => {}
 }

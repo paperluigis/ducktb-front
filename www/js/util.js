@@ -72,7 +72,7 @@ export function formatMsg(a) {
 				return unmdhtml(duck)
 			}
 		})
-		.replace(/^> (.+)$/gm, `<div style="border-left: .75ch solid #144; padding-left: 1.25ch">$1/div>`)
+		.replace(/^> (.+)$/gm, `<div style="border-left: .75ch solid #144; padding-left: 1.25ch">$1</div>`)
 		.replace(/^# (.+)$/gm, `<h1>$1</h1>`)
 		.replace(/^## (.+)$/gm, `<h2>$1</h2>`)
 		.replace(/^### (.+)$/gm, `<h3>$1</h3>`)

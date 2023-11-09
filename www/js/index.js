@@ -1,15 +1,15 @@
 // imports
-import { nickChangeDialog, roomCreateDialog } from "./dialogs.js";
-import { tabs, Tab } from "./tab.js";
+import { nickChangeDialog, roomCreateDialog } from "i_dialogs";
+import { tabs, Tab } from "i_tab";
 //import { commandPrompt }
-import { ac_triggers, acClear } from "./autocomplete.js";
-import { connections, Connection } from "./connection.js";
-import { nickHTML, formatMsg, validate_string } from "./util.js?1";
-import * as ele from "./ui_elements.js";
+import { ac_triggers, acClear } from "i_autocomplete";
+import { connections, Connection } from "i_connection";
+import { nickHTML, formatMsg, validate_string } from "i_util";
+import * as ele from "i_ui_elements";
 
 import HighlightJS from "https://esm.sh/highlight.js";
-//import SimplePeer from "https://esm.sh/simple-peer@9";
-import CBOR from "https://esm.sh/cbor-js";
+//import SimplePeer from "simple-peer";
+import CBOR from "cbor-js";
 
 document.body.addEventListener("mouseleave", ()=>{
 	Tab.focused.ui_handle_mouse();

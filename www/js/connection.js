@@ -1,4 +1,4 @@
-import { Tab } from "./tab.js";
+import { Tab } from "i_tab";
 
 export const connections = new Map();
 export class Connection {
@@ -33,6 +33,7 @@ export class Connection {
 		this.#ws = new WebSocket(this.#uri, "json-v2");
 		this.#ws.addEventListener("open", ()=>{
 			this.#rate_reset_timer = setInterval(()=>this.#rate_reset(), 5100); // overshoot a little
+			this.#rate_reset();
 		});
 		this.#ws.addEventListener("close", ()=>{
 			if(this.#reconn != -1) this.#reconn = setTimeout(()=>this.connect(), 5000);
@@ -68,7 +69,7 @@ export class Connection {
 			case "TYPING": qe = "typing"; break
 			case "MOUSE": qe = "mouse"; break;
 			case "USER_CHANGE_NICK": qe = "chnick"; break;
-			case "MESSAGE": qe = "message"; break;
+			case "MESSAGE": case "MESSAGE_DM": qe = "message"; break;
 			case "ROOM_JOIN": case "ROOM_LEAVE": qe = "room"; break;
 		}
 		return qe;
@@ -169,6 +170,10 @@ export class Connection {
 				let t = this.#tabs[args[0]];
 				t.printMsg(args[1], true);
 			}; break;
+			case "MESSAGE_DM": {
+				let t = this.#tabs[args[0]];
+				t.printMsg(args[1], true, args[1].sent_to==this.#userid ? "r" : "t");
+			}; break;
 			case "TYPING": {
 				let t = this.#tabs[args[0]];
 				t.updateTyping(args[1])
@@ -216,14 +221,18 @@ export class Connection {
 		this.#tabs.push(t);
 
 		t.name = (this.#name ? this.#name+" - #" : "#") + room_name;
-		t.canSend = true;
+		t.canDM = true;
 		t.onMouse = (x, y) => {
 			let r = this.#tabs.findIndex(e=>e==t);
 			return this.send_event("MOUSE", r, x, y);
 		}
-		t.onMessage = (str) => {
+		t.onMessage = (str, id) => {
 			let r = this.#tabs.findIndex(e=>e==t);
-			return this.send_event("MESSAGE", r, str);
+			if(id) {
+				return this.send_event("MESSAGE_DM", r, str, id);
+			} else {
+				return this.send_event("MESSAGE", r, str);
+			}
 		}
 		t.onTyping = (b) => {
 			let r = this.#tabs.findIndex(e=>e==t);

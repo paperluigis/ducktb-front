@@ -1,20 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, user-scalable=no">
-    <meta name="title" content="ducktb">
-    <meta name="description" content="not a trollbox clone anymore, at all, not even visually">
-    <title>duck"tb"</title>
-    <link rel="stylesheet" href="trollbox.css">
-    <link rel="stylesheet" href="base16-apathy-hljs.css">
-    <script defer type="module" src="./js/index.js"></script>
-	<!-- defines an array of functions to be called when the main script and it's dependencies load -->
-	<script>ready??=[];</script>
-</head>
-<body>
-    <div id="container">
+	<head>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, user-scalable=no">
+		<meta name="title" content="ducktb">
+		<meta name="description" content="not a trollbox clone anymore, at all, not even visually">
+		<title>duck"tb"</title>
+		<link rel="stylesheet" href="trollbox.css?2">
+		<link rel="stylesheet" href="base16-apathy-hljs.css">
+		<script type="importmap">
+			{
+				"imports": {
+					"i_autocomplete": "./js/autocomplete.js",
+					"i_connection": "./js/connection.js?1",
+					"i_dialogs": "./js/dialogs.js",
+					"i_emojimap": "./js/emojimap.js",
+					"i_index": "./js/index.js",
+					"i_tab": "./js/tab.js?1",
+					"i_ui_elements": "./js/ui_elements.js",
+					"i_util": "./js/util.js",
+
+					"highlight.js": "https://esm.sh/highlight.js",
+					"simple-peer": "https://esm.sh/simple-peer@9",
+					"cbor-js": "https://esm.sh/cbor-js"
+				}
+			}
+		</script>
+		<script defer type="module" src="./js/index.js"></script>
+		<!-- defines an array of functions to be called when the main script and it's dependencies load -->
+		<script>ready??=[];</script>
+	</head>
+	<body>
+<div id="container">
 		<div id="tabbarctr">
 			<div id="tabbar"></div>
 			<div id="tabctl">
@@ -30,16 +48,16 @@
 				<div class="infos"></div>
 			</div>
 		</div>
-        <div id="type">
-            <div id="typing_users"></div>
-            <button id="nick_btn">Nick</button>
-            <div id="input_wrap">
+<div id="type">
+<div id="typing_users"></div>
+<button id="nick_btn">Nick</button>
+<div id="input_wrap">
 				<div id="autocomp_bar" hidden></div>
 				<textarea id="input" autofocus maxlength="2000"></textarea>
 			</div>
-            <button id="send" disabled>Send</button>
-        </div>
+<button id="send" disabled>Send</button>
+</div>
 		<div id="micectr"></div>
-    </div>
+</div>
 </body>
 </html>

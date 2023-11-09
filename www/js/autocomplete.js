@@ -1,5 +1,5 @@
-import { emojimap, emojientr } from "./emojimap.js";
-import * as ele from "./ui_elements.js";
+import { emojimap, emojientr } from "i_emojimap";
+import * as ele from "i_ui_elements";
 
 // modifiable object (is to be modified by "plugins" (userscripts))
 // const ac_triggers: Record<string, (str: string, pos: number) => [[string, string][], number, number]>

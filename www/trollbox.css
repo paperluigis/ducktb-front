@@ -5,6 +5,8 @@
 	--fg0d: #277;
 	--fg0: #4a6;
 	--fg1: #7f9;
+	--dm-receive: #1445;
+	--dm-send: #3115;
 	--border0: .15em solid;
 	--shadow0: .15em .15em .3em;
 	--backdrop0: brightness(.05) blur(.5em) brightness(20);
@@ -268,7 +270,7 @@ em {
 	position: sticky;
 	top: 100%;
 	display: grid;
-	grid-template-columns: auto auto 1fr;
+	grid-template-columns: auto 18ch 1fr;
 }
 
 .line {
@@ -303,7 +305,6 @@ em {
 	max-width: 12ch;
 	padding-right: 1ch;
 }
-
 .infos .nick::before {
 	float: right;
     content: attr(data-trhome);
@@ -313,6 +314,19 @@ em {
 	float: left;
     content: attr(data-trhome);
 	color: #777;
+	padding-right: 1ch;
+}
+.line.dm-recv>* {
+	background: var(--dm-receive);
+}
+.line.dm-recv>.nick::before {
+    content: attr(data-trhome) " from";
+}
+.line.dm-send>* {
+	background: var(--dm-send);
+}
+.line.dm-send>.nick::before {
+    content: attr(data-trhome) " to";
 }
 .nick {
     text-overflow: ellipsis;
