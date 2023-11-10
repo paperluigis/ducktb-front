@@ -3,3 +3,7 @@ node_modules/
 
 # nano's lockfies
 .*.swp
+
+# very prone to changing
+test-page.html
+test-page.js

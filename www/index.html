@@ -14,9 +14,9 @@
 				"imports": {
 					"i_autocomplete": "./js/autocomplete.js",
 					"i_connection": "./js/connection.js?1",
-					"i_dialogs": "./js/dialogs.js",
+					"i_dialogs": "./js/dialogs.js?2",
 					"i_emojimap": "./js/emojimap.js",
-					"i_index": "./js/index.js",
+					"i_index": "./js/index.js?2",
 					"i_tab": "./js/tab.js?4",
 					"i_ui_elements": "./js/ui_elements.js",
 					"i_util": "./js/util.js?2",
@@ -28,36 +28,34 @@
 			}
 		</script>
 		<script defer type="module" src="./js/index.js"></script>
-		<!-- defines an array of functions to be called when the main script and it's dependencies load -->
-		<script>ready??=[];</script>
 	</head>
 	<body>
-<div id="container">
-		<div id="tabbarctr">
-			<div id="tabbar"></div>
-			<div id="tabctl">
-				<button id="tab_close"></button>
-				<button id="tab_create"></button>
-			</div>
-		</div>
-		<div id="tabctr">
-			<div id="tab_placeholder" class="tab visible">
-				<div class="scroll">
-					<noscript><span class="line"><span class="time"></span><span class="nick" style="color:#0f0" data-sid="system" data-home="local">&lt;system></span><span class="msg"><div class="msg_ctx">JavaScript must be enabled for this application to work.</div></span></span></noscript>
+		<div id="container">
+			<div id="tabbarctr">
+				<div id="tabbar"></div>
+				<div id="tabctl">
+					<button id="tab_close"></button>
+					<button id="tab_create"></button>
 				</div>
-				<div class="infos"></div>
 			</div>
+			<div id="tabctr">
+				<div id="tab_placeholder" class="tab visible">
+					<div class="scroll">
+						<noscript><span class="line"><span class="time"></span><span class="nick" style="color:#0f0" data-sid="system" data-home="local">&lt;system></span><span class="msg"><div class="msg_ctx">JavaScript must be enabled for this application to work.</div></span></span></noscript>
+					</div>
+					<div class="infos"></div>
+				</div>
+			</div>
+			<div id="type">
+				<div id="typing_users"></div>
+				<button id="nick_btn">Nick</button>
+				<div id="input_wrap">
+					<div id="autocomp_bar" hidden></div>
+					<textarea id="input" autofocus maxlength="2000"></textarea>
+				</div>
+				<button id="send" disabled>Send</button>
+			</div>
+			<div id="micectr"></div>
 		</div>
-<div id="type">
-<div id="typing_users"></div>
-<button id="nick_btn">Nick</button>
-<div id="input_wrap">
-				<div id="autocomp_bar" hidden></div>
-				<textarea id="input" autofocus maxlength="2000"></textarea>
-			</div>
-<button id="send" disabled>Send</button>
-</div>
-		<div id="micectr"></div>
-</div>
-</body>
+	</body>
 </html>

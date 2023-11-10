@@ -1,5 +1,5 @@
 // imports
-import { nickChangeDialog, roomCreateDialog } from "i_dialogs";
+import { nickChangeDialog, roomCreateDialog, contextMenu } from "i_dialogs";
 import { tabs, Tab } from "i_tab";
 //import { commandPrompt }
 import { ac_triggers, acClear } from "i_autocomplete";
@@ -70,9 +70,9 @@ duckhash();
 window.addEventListener("keydown", e=>{
 	if(!e.altKey) return;
 	let sw=0;
-	switch(e.key) {
-		case "w": ele.tab_closebtn.click(); break;
-		case "t": ele.tab_createbtn.click(); break;
+	switch(e.code) {
+		case "KeyW": ele.tab_closebtn.click(); break;
+		case "KeyT": ele.tab_createbtn.click(); break;
 		case "ArrowLeft": sw=-1; break;
 		case "ArrowRight": sw=1; break;
 		default: return;
@@ -86,11 +86,40 @@ window.addEventListener("keydown", e=>{
 	sa[si].click();
 });
 
+window.addEventListener("contextmenu", e=>{
+	let el = e.target;
+	for(;el!=document;el=el.parentNode) {
+		if(el.matches(".nick")) {
+			nickCtx(el, e); break
+		} else if(el.matches(".line")) {
+			msgCtx(el, e); break
+		} else if(el.matches("input[name=tabsel] + label")) {
+			roomCtx(el, e); break
+		}
+	}
+	if(el!=document)
+		e.preventDefault();
+});
+
+function nickCtx(elt, ev) {
+	console.log("nick element", elt);
+	contextMenu([
+		{ cont: `sid: ${elt.dataset.sid}`, disabled: true },
+		{ cont: `home: ${elt.dataset.home}`, disabled: true },
+	], ev.clientX, ev.clientY);
+}
+function msgCtx(elt, ev) {
+	console.log("message element", elt);
+}
+function roomCtx(elt, ev) {
+	console.log("room tab element", elt);
+}
+
 default_connection.connect();
 
 
 Object.assign(window, {
-	nickChangeDialog, roomCreateDialog, ele,
+	nickChangeDialog, roomCreateDialog, contextMenu, ele,
 	HighlightJS, CBOR,
 	ac_triggers,
 	tabs, Tab,
@@ -100,4 +129,5 @@ Object.assign(window, {
 });
 
 
+window.ready ??= [];
 for(let b of window.ready) try { b() } catch(e) { console.error(e) }

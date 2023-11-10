@@ -55,3 +55,121 @@ Create/join a room
 		ct.addEventListener("cancel", () => r(null));
 	});
 }
+
+function innerContextMenu(ct, items, map, pos) {
+	let bt = document.createElement("div");
+	let inners = [];
+	bt.className = "context_map";
+	ct.appendChild(bt);
+	for(let b of items) {
+		if(b.separator) {
+			bt.appendChild(document.createElement("hr"));
+			continue;
+		}
+		let t = document.createElement("button");
+		t.className = "context_entry";
+		t.textContent = b.cont;
+		t.disabled = b.disabled;
+		bt.appendChild(t);
+		if(b.inner) {
+			t.classList.add("context_nested", "active");
+			inners.push([t, b.inner]);
+		}
+		map.set(t, b);
+	}
+	if(pos) {
+		let [x, y] = pos;
+		bt.style.left = x+"px";
+		bt.style.top = y+"px";
+	}
+	let bn = bt.getBoundingClientRect();
+	let wrapX = bn.right > innerWidth;
+	let wrapY = bn.bottom > innerHeight;
+	if(pos) {
+		let [x, y] = pos;
+		if(wrapX) {
+			bt.style.left = "";
+			bt.style.right = (innerWidth-x)+"px";
+		}
+		if(wrapY) {
+			bt.style.top = "";
+			bt.style.bottom = (innerHeight-y)+"px";
+		}
+	} else {
+		wrapX && bt.classList.add("context_toleft");
+	}
+	for(let [t, b] of inners) {
+		innerContextMenu(t, b, map);
+		t.classList.remove("active");
+	}
+	return bt;
+}
+
+let cancelMenu = ()=>{};
+export function contextMenu(items, x, y) {
+	let ct = document.createElement("dialog");
+	document.body.appendChild(ct);
+	ct.className = "context_menu";
+	ct.addEventListener("close", () => ct.remove());
+
+	cancelMenu();
+	ct.showModal();
+
+	let map = new Map();
+	let bt = innerContextMenu(ct, items, map, [x, y]);
+
+	let pr = new Promise(r => {
+		cancelMenu = () => { ct.close(); r(null) }
+		ct.addEventListener("mousedown", e => {
+			if(e.target == ct) {
+				e.preventDefault();
+				e.stopPropagation();
+				ct.close();
+				r(null);
+			}
+		});
+		ct.addEventListener("click", e => {
+			if(e.target == ct) {
+				ct.close(); r(null)
+			} else if(map.get(e.target)?.value != null) {
+				ct.close(); r(map.get(e.target).value);
+			}
+		});
+		let ft = bt;
+		ct.addEventListener("keydown", e => {
+			let a = [].map.call(ft.children, b=>[b, map.get(b)]).filter(e=>e[1]&&!e[0].disabled);
+			let i = a.findIndex(e=>e[0].classList.contains("active"));
+			if(i == -1) i = 0;
+			let o=0;
+			switch(e.code) {
+				case "ArrowDown": o=1; break;
+				case "ArrowUp": o=-1; break;
+				case "ArrowLeft": {
+					let f = ft.parentNode.parentNode;
+					if(f.classList.contains("context_map")) {
+						a[i][0].classList.remove("active");
+						ft = f
+					}
+				} break;
+				case "Enter": if(!a[i][1].inner) { a[i][0].click(); break; }
+				case "ArrowRight": if(a[i][1].inner) {
+					let f = a[i][0].children[0];
+					if(f.classList.contains("context_map")) {
+						a[i][0].classList.add("active");
+						ft = f
+						ft.querySelector(".context_entry").classList.add("active");
+					}
+				} break;
+				default: return;
+			}
+			if(a.length && o) {
+				a[(i+o+a.length)%a.length][0].classList.add("active");
+				a[i][0].classList.remove("active");
+				e.preventDefault();
+			}
+		});
+		ct.addEventListener("cancel", () => r(null));
+	});
+	//pr.cancel = cancel;
+	return pr;
+}
