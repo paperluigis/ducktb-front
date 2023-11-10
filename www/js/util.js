@@ -72,10 +72,10 @@ export function formatMsg(a) {
 				return unmdhtml(duck)
 			}
 		})
-		.replace(/^> (.+)$/gm, `<div style="border-left: .75ch solid #144; padding-left: 1.25ch">$1</div>`)
-		.replace(/^# (.+)$/gm, `<h1>$1</h1>`)
-		.replace(/^## (.+)$/gm, `<h2>$1</h2>`)
-		.replace(/^### (.+)$/gm, `<h3>$1</h3>`)
+		.replace(/^> (.+)(\n?)$/gm, `<div style="border-left: .75ch solid #144; padding-left: 1.25ch">$1</div>`)
+		.replace(/^# (.+)(\n?)$/gm, `<h1>$1</h1>`)
+		.replace(/^## (.+)(\n?)$/gm, `<h2>$1</h2>`)
+		.replace(/^### (.+)(\n?)$/gm, `<h3>$1</h3>`)
 		.replace(/(\\)?:(\w+?):/g, function (entire, esc, ducks) {
 			if (esc) return `:${ducks}:`;
 			return emojimap[ducks[0]]?.[ducks] || entire;

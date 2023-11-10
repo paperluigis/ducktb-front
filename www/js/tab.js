@@ -1,5 +1,5 @@
-import { nickHTML, formatMsg, validate_string } from "./util.js?1";
-import * as ele from "./ui_elements.js";
+import { nickHTML, formatMsg, validate_string } from "i_util";
+import * as ele from "i_ui_elements";
 
 import tw from "https://esm.sh/twemoji@14";
 const tw_options = {
@@ -224,8 +224,8 @@ export class Tab {
 	#isTyping = false;
 	#typeTimer;
 	ui_handle_input(i=true) {
-		this.focus();
 		if(i) {
+			this.focus();
 			clearTimeout(this.#typeTimer);
 			this.#typeTimer = setTimeout(()=>this.ui_handle_input(false), 2000);
 		}
