@@ -96,3 +96,12 @@ export function validate_string(s) {
 	// The server doesn't check for string validity, but we prevent sending messages that contain only whitespace.
 	return !!s.trim();
 }
+
+export async function copyText(t) {
+	try {
+		await navigator.clipboard.writeText(t);
+		return true;
+	} catch(a) {
+		return false;
+	}
+}

@@ -4,7 +4,7 @@ import { tabs, Tab } from "i_tab";
 //import { commandPrompt }
 import { ac_triggers, acClear } from "i_autocomplete";
 import { connections, Connection } from "i_connection";
-import { nickHTML, formatMsg, validate_string } from "i_util";
+import { copyText, nickHTML, formatMsg, validate_string } from "i_util";
 import * as ele from "i_ui_elements";
 
 import HighlightJS from "https://esm.sh/highlight.js";
@@ -68,6 +68,7 @@ window.addEventListener("hashchange", duckhash);
 duckhash();
 
 window.addEventListener("keydown", e=>{
+	if(!e.altKey && !e.ctrlKey) ele.input.focus();
 	if(!e.altKey) return;
 	let sw=0;
 	switch(e.code) {
@@ -85,10 +86,19 @@ window.addEventListener("keydown", e=>{
 	if(si==sa.length) si=0;
 	sa[si].click();
 });
+ele.input.addEventListener("keydown", e=>{
+	switch(e.code) {
+		case "Escape": Tab.focused.ui_handle_stopdm(); break;
+		default: return;
+	}
+	e.preventDefault();
+});
 
 window.addEventListener("contextmenu", e=>{
 	let el = e.target;
 	for(;el!=document;el=el.parentNode) {
+		// default context menu for
+		if(el.matches("img, a")) return;
 		if(el.matches(".nick")) {
 			nickCtx(el, e); break
 		} else if(el.matches(".line")) {
@@ -101,12 +111,37 @@ window.addEventListener("contextmenu", e=>{
 		e.preventDefault();
 });
 
-function nickCtx(elt, ev) {
+async function nickCtx(elt, ev) {
 	console.log("nick element", elt);
-	contextMenu([
-		{ cont: `sid: ${elt.dataset.sid}`, disabled: true },
-		{ cont: `home: ${elt.dataset.home}`, disabled: true },
-	], ev.clientX, ev.clientY);
+	let m = Tab.focused;
+	let it = [];
+	if(elt.dataset.sid == elt.dataset.home && elt.dataset.sid) {
+		it.push({ cont: `id: ${elt.dataset.sid}`, disabled: true })
+	} else {
+		if(elt.dataset.sid) it.push({ cont: `sid: ${elt.dataset.sid}`, disabled: true });
+		if(elt.dataset.home) it.push({ cont: `home: ${elt.dataset.home}`, disabled: true });
+	}
+	it.push(
+		{ separator: true },
+		{ cont: "Copy", inner: [
+			{ cont: "Copy nick", value: "copy_nick" },
+			{ cont: "Copy home", value: "copy_home", disabled: !elt.dataset.home },
+			{ cont: "Copy sid", value: "copy_sid", disabled: !elt.dataset.sid },
+		] }
+	);
+	if(m.users[elt.dataset.sid]) {
+		it.push(
+			{ cont: "DM", value: "dm", disabled: !m.canDM },
+			{ cont: "Mention", disabled: true }
+		);
+	}
+	let b = await contextMenu(it, ev.clientX, ev.clientY);
+	switch(b) {
+		case "dm": m.ui_handle_startdm(elt.dataset.sid); break;
+		case "copy_nick": copyText(elt.textContent); break;
+		case "copy_home": copyText(elt.dataset.home); break;
+		case "copy_sid": copyText(elt.dataset.sid); break;
+	}
 }
 function msgCtx(elt, ev) {
 	console.log("message element", elt);
@@ -123,7 +158,7 @@ Object.assign(window, {
 	HighlightJS, CBOR,
 	ac_triggers,
 	tabs, Tab,
-	formatMsg, nickHTML, validate_string,
+	formatMsg, nickHTML, validate_string, copyText,
 	Connection, connections, default_connection,
 	username
 });

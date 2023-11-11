@@ -67,6 +67,7 @@ function innerContextMenu(ct, items, map, pos) {
 			continue;
 		}
 		let t = document.createElement("button");
+		t.tabIndex = -1;
 		t.className = "context_entry";
 		t.textContent = b.cont;
 		t.disabled = b.disabled;
@@ -97,6 +98,7 @@ function innerContextMenu(ct, items, map, pos) {
 		}
 	} else {
 		wrapX && bt.classList.add("context_toleft");
+		wrapY && bt.classList.add("context_toup");
 	}
 	for(let [t, b] of inners) {
 		innerContextMenu(t, b, map);
@@ -137,9 +139,9 @@ export function contextMenu(items, x, y) {
 		});
 		let ft = bt;
 		ct.addEventListener("keydown", e => {
+			e.stopPropagation();
 			let a = [].map.call(ft.children, b=>[b, map.get(b)]).filter(e=>e[1]&&!e[0].disabled);
 			let i = a.findIndex(e=>e[0].classList.contains("active"));
-			if(i == -1) i = 0;
 			let o=0;
 			switch(e.code) {
 				case "ArrowDown": o=1; break;
@@ -147,24 +149,26 @@ export function contextMenu(items, x, y) {
 				case "ArrowLeft": {
 					let f = ft.parentNode.parentNode;
 					if(f.classList.contains("context_map")) {
-						a[i][0].classList.remove("active");
+						a[i]?.[0].classList.remove("active");
 						ft = f
 					}
 				} break;
-				case "Enter": if(!a[i][1].inner) { a[i][0].click(); break; }
-				case "ArrowRight": if(a[i][1].inner) {
+				case "Enter": if(!a[i]?.[1].inner) { a[i]?.[0].click(); break; }
+				case "ArrowRight": if(a[i]?.[1].inner) {
 					let f = a[i][0].children[0];
-					if(f.classList.contains("context_map")) {
+					if(f.classList.contains("context_map") && f.querySelector(":scope > button:not(:disabled)")) {
 						a[i][0].classList.add("active");
 						ft = f
 						ft.querySelector(".context_entry").classList.add("active");
 					}
 				} break;
+				case "Tab": e.preventDefault();
 				default: return;
 			}
-			if(a.length && o) {
-				a[(i+o+a.length)%a.length][0].classList.add("active");
+			if(a.length && (o || i == -1)) {
+				if(i == -1) { i = 0; if(o == 1) o = 0; }
 				a[i][0].classList.remove("active");
+				a[(i+o+a.length)%a.length][0].classList.add("active");
 				e.preventDefault();
 			}
 		});

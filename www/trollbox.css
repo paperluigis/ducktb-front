@@ -82,7 +82,8 @@ body {
 #tabctl button:not(:first-child) {
 	border-left: var(--border0) var(--fg1);
 }
-#tab_close::before {
+#tab_close::before,
+#stopdm_btn::before {
 	content: "x";
 }
 #tab_create::before {
@@ -94,6 +95,11 @@ body {
     display: grid;
     gap: 8px;
     grid-template-columns: auto 1fr auto;
+}
+#stopdm_btn {
+	vertical-align: bottom;
+	height: calc(100% + 4px);
+	margin: -2px 4px -2px -5px;
 }
 .tab {
 	display: none;
@@ -229,14 +235,19 @@ html>body [disabled] {
 .context_nested:is(:hover, :focus), .context_entry.active { background: var(--fg0); }
 .context_nested:not(:hover, :focus, .active) > .context_map { display: none; }
 
-.context_nested > .context_map.context_toleft {
+.context_nested > .context_map {
 	position: absolute;
+}
+.context_nested > .context_map.context_toup {
+	bottom: -1px;
+}
+.context_nested > .context_map:not(.context_toup) {
 	top: -1px;
+}
+.context_nested > .context_map.context_toleft {
 	right: 100%;
 }
 .context_nested > .context_map:not(.context_toleft) {
-	position: absolute;
-	top: -1px;
 	left: 100%;
 }
 dialog::backdrop {
@@ -245,6 +256,7 @@ dialog::backdrop {
 dialog.context_menu {
 	padding: 0;
 	border: none;
+	outline: none;
 }
 dialog:not(.context_menu), .context_map {
     color: var(--fg1);

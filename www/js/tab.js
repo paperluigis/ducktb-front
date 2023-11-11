@@ -90,17 +90,21 @@ export class Tab {
 		this.#name = x;
 		this.#el.optlabel.textContent = this.#unreadMsgCount ? `${x} (${this.#unreadMsgCount})` : x;
 	}
+	get canDM() { return this.#canDM; }
 	set canDM(x) {
 		this.#canDM = x;
 	}
+	get canType() { return this.#canType; }
 	set canType(x) {
 		this.#canType = x;
 		if(this == Tab.focused) { this.focus() }
 	}
+	get canSend() { return this.#canSend; }
 	set canSend(x) {
 		this.#canSend = x;
 		if(this == Tab.focused) { this.focus() }
 	}
+	get canClose() { return this.#canClose }
 	set canClose(x) {
 		this.#canClose = x;
 		if(this == Tab.focused) { this.focus() }
@@ -124,26 +128,39 @@ export class Tab {
 		}
 	}
 	focus() {
-		if(this.closed) return;
-		if(Tab.#focused != this) {
-			this.#el.opt.checked = true;
-			Tab.#focused?.ui_handle_mouse();
-			Tab.#focused = this;
-			for(let e of document.querySelectorAll(".tab.visible, .mice.visible")) e.classList.remove("visible");
-			Tab.#focused.#el.tabelt.classList.add("visible");
-			Tab.#focused.#el.mice.classList.add("visible");
-		}
+		if(this.closed || Tab.focused == this) return;
+		this.#el.opt.checked = true;
+		Tab.focused?.ui_handle_mouse();
+		Tab.#focused = this;
+		for(let e of document.querySelectorAll(".tab.visible, .mice.visible")) e.classList.remove("visible");
+		Tab.focused.#el.tabelt.classList.add("visible");
+		Tab.focused.#el.mice.classList.add("visible");
+		this.updateUI();
+	}
+	updateUI() {
+		if(Tab.focused != this) return;
 		ele.tab_closebtn.disabled = !this.#canClose;
 		ele.input.disabled = !this.#canType;
 		ele.sendbtn.disabled = !this.#canSend || !validate_string(ele.input.value);
 		ele.typing_users.textContent = "";
-		let tn;
+		let tn, b = 0;
+		if(this.#dmTarget) {
+			let stop = document.createElement("button");
+			stop.id = "stopdm_btn";
+			stop.onclick = () => this.ui_handle_stopdm();
+			ele.typing_users.appendChild(stop);
+			ele.typing_users.appendChild(document.createTextNode("Sending DMs to "));
+			ele.typing_users.appendChild(nickHTML(this.#users[this.#dmTarget]));
+		}
 		for(let sid of this.#typing) {
 			if(!this.#users[sid]) continue;
+			if(b == 0 && this.#dmTarget)
+				ele.typing_users.appendChild(document.createTextNode(" | "));
+			b++;
 			ele.typing_users.appendChild(nickHTML(this.#users[sid]));
 			ele.typing_users.appendChild(tn=document.createTextNode(", "));
 		}
-		if(tn) tn.textContent = this.#typing.length > 1 ? " are typing…" : " is typing…";
+		if(tn) tn.textContent = b > 1 ? " are typing…" : " is typing…";
 		this.#unreadMsgCount = 0;
 		this.name += "";
 		this.scrollDown();
@@ -151,7 +168,7 @@ export class Tab {
 
 	updateTyping(data) {
 		this.#typing = [...data];
-		if(Tab.focused == this) { this.focus() }
+		this.updateUI();
 	}
 	updateUsers(data) {
 		this.#el.infos.innerHTML = `<em>ONLINE - ${data.length}</em>`;
@@ -164,6 +181,10 @@ export class Tab {
 			if(this.#users[i]) continue;
 			sus.remove();
 			delete this.#mice[i];
+		}
+		if(!this.#users[this.#dmTarget]) {
+			this.#dmTarget = null;
+			this.updateUI();
 		}
 	}
 	printMsg(data, countUnread, dm="") {
@@ -224,8 +245,8 @@ export class Tab {
 	#isTyping = false;
 	#typeTimer;
 	ui_handle_input(i=true) {
+		this.updateUI();
 		if(i) {
-			this.focus();
 			clearTimeout(this.#typeTimer);
 			this.#typeTimer = setTimeout(()=>this.ui_handle_input(false), 2000);
 		}
@@ -235,7 +256,7 @@ export class Tab {
 	}
 	ui_handle_send() {
 		if(ele.sendbtn.disabled) return false;
-		if(this.onMessage(ele.input.value.trim(), null) == false) return false;
+		if(this.onMessage(ele.input.value.trim(), this.#dmTarget) == false) return false;
 		ele.input.value="";
 		this.focus();
 		this.#isTyping = false;
@@ -249,6 +270,16 @@ export class Tab {
 		if(e == null) return this.onMouse(-1, -1);
 		// limit to approximately 13.3 events per second
 		this.onMouse(e.clientX / innerWidth, e.clientY / innerHeight);
+	}
+	#dmTarget = null;
+	ui_handle_startdm(uid) {
+		if(!this.#users[uid]) return;
+		this.#dmTarget = uid;
+		this.updateUI();
+	}
+	ui_handle_stopdm() {
+		this.#dmTarget = null;
+		this.updateUI();
 	}
 
 	// event handlers
