@@ -57,9 +57,8 @@ const username = [localStorage.user_pseudo, localStorage.user_color];
 ele.nickbtn.textContent = username[0];
 
 const default_ws_url = localStorage.ws_url ? new URL(localStorage.ws_url) : new URL("/ws",location.href);
+localStorage["rooms-default"] ??= `["lobby"]`;
 const default_connection = new Connection(default_ws_url, "default", username);
-default_connection.createTab("lobby").focus();
-
 function duckhash() {
 	if(location.hash.slice(1).trim())
 		default_connection.createTab(decodeURIComponent(location.hash.slice(1))).focus();

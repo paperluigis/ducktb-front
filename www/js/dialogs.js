@@ -165,11 +165,11 @@ export function contextMenu(items, x, y) {
 				case "Tab": e.preventDefault();
 				default: return;
 			}
+			e.preventDefault();
 			if(a.length && (o || i == -1)) {
 				if(i == -1) { i = 0; if(o == 1) o = 0; }
 				a[i][0].classList.remove("active");
 				a[(i+o+a.length)%a.length][0].classList.add("active");
-				e.preventDefault();
 			}
 		});
 		ct.addEventListener("cancel", () => r(null));
