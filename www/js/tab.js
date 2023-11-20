@@ -78,6 +78,7 @@ export class Tab {
 			Tab.#creating = true;
 			tab = new Tab(id);
 			tabs.set(id, tab);
+			if(!Tab.focused) tab.focus();
 		}
 		return tab;
 	}

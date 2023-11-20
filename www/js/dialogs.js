@@ -4,13 +4,8 @@ export function nickChangeDialog(cancellable, nick, color) {
 	ct.innerHTML = `
 <input class="prompt_input block a1" maxlength="40" placeholder="nickname">
 #<input class="prompt_input a2" style="width:6ch" maxlength="6" placeholder="hex">
-<span class="prompt_color_input_wrapper">
-	<input class="prompt_color_input a3" type="color">
-</span>
-<div class="prompt_buttons">
-	<button class="a4">OK</button>
-	<button class="a5">Cancel</button>
-</div>`;
+<span class="prompt_color_input_wrapper"><input class="prompt_color_input a3" type="color"></span>
+<div class="prompt_buttons"><button class="a4">OK</button><button class="a5">Cancel</button></div>`;
 	let a1 = ct.querySelector(".a1");
 	let a2 = ct.querySelector(".a2");
 	let a3 = ct.querySelector(".a3");
@@ -55,6 +50,22 @@ Create/join a room
 		ct.addEventListener("cancel", () => r(null));
 	});
 }
+
+export function settingsChangeDialog() {
+	let ct = document.createElement("dialog");
+	document.body.appendChild(ct);
+	ct.innerHTML = `<em>This section is not done yet.</em><div class="prompt_buttons"><button class="x1" disabled>OK</button><button class="x2">Cancel</button></div>`;
+	let x1 = ct.querySelector(".x1");
+	let x2 = ct.querySelector(".x2");
+	ct.addEventListener("close", () => ct.remove());
+	ct.showModal();
+	return new Promise(r => {
+		x2.addEventListener("click", () => { ct.close(); r(null) });
+		ct.addEventListener("cancel", () => r(null));
+	});
+}
+
+
 
 function innerContextMenu(ct, items, map, pos) {
 	let bt = document.createElement("div");
@@ -156,10 +167,11 @@ export function contextMenu(items, x, y) {
 				case "Enter": if(!a[i]?.[1].inner) { a[i]?.[0].click(); break; }
 				case "ArrowRight": if(a[i]?.[1].inner) {
 					let f = a[i][0].children[0];
-					if(f.classList.contains("context_map") && f.querySelector(":scope > button:not(:disabled)")) {
+					let fndb = f.querySelector(":scope > button:not(:disabled)");
+					if(f.classList.contains("context_map") && fndb) {
 						a[i][0].classList.add("active");
 						ft = f
-						ft.querySelector(".context_entry").classList.add("active");
+						fndb.classList.add("active");
 					}
 				} break;
 				case "Tab": e.preventDefault();

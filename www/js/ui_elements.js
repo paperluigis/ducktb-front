@@ -1,6 +1,7 @@
 export const autocomp_bar = document.querySelector("#autocomp_bar");
 export const input = document.querySelector("#input");
 export const sendbtn = document.querySelector("#send");
+export const settingsbtn = document.querySelector("#settingsbtn");
 export const nickbtn = document.querySelector("#nick_btn");
 export const tabctr = document.querySelector("#tabctr");
 export const micectr = document.querySelector("#micectr");

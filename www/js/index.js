@@ -1,5 +1,5 @@
 // imports
-import { nickChangeDialog, roomCreateDialog, contextMenu } from "i_dialogs";
+import { nickChangeDialog, roomCreateDialog, settingsChangeDialog, contextMenu } from "i_dialogs";
 import { tabs, Tab } from "i_tab";
 //import { commandPrompt }
 import { ac_triggers, acClear } from "i_autocomplete";
@@ -39,6 +39,9 @@ ele.nickbtn.addEventListener("click", async ()=>{
 	localStorage.user_color  = username[1] = a[1];
 	for(let c of connections.values()) c.updateNickname(username);
 });
+ele.settingsbtn.addEventListener("click", async ()=>{
+	settingsChangeDialog();
+});
 ele.tab_closebtn.addEventListener("click", ()=>{
 	Tab.focused.close();
 });
@@ -73,6 +76,7 @@ window.addEventListener("keydown", e=>{
 	switch(e.code) {
 		case "KeyW": ele.tab_closebtn.click(); break;
 		case "KeyT": ele.tab_createbtn.click(); break;
+		case "KeyZ": ele.nickbtn.click(); break;
 		case "ArrowLeft": sw=-1; break;
 		case "ArrowRight": sw=1; break;
 		default: return;
