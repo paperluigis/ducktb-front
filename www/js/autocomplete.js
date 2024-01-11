@@ -12,7 +12,7 @@ export const ac_triggers = {
 		if(be.length<2 || !emojientr[be[0]]) return [[],ss,se];
 		else return [emojientr[be[0]]
 			.filter(([k,v])=>k.startsWith(be)).slice(0,30)
-			.map(([k,v])=>[`${v} :${k}:`, `${k}:`]), ss, se];
+			.map(([k,v])=>[`${v} :${k}:`, `${v}`]), ss-1, se];
 	}
 }
 
