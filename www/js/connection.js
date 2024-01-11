@@ -5,6 +5,7 @@ export class Connection {
 	#rate_max;
 	#rate_cur = {message:0,typing:0,chnick:0,room:0,mouse:0};
 	#rate_reset_timer;
+	#resume_id;
 	#uri;
 	#name;
 	#userid;
@@ -30,7 +31,7 @@ export class Connection {
 		if(this.#ws) return;
 		clearTimeout(this.#reconn);
 		this.#reconn = 0;
-		this.#ws = new WebSocket(this.#uri, "json-v2");
+		this.#ws = new WebSocket(new URL("?"+this.#resume_id, this.#uri), "json-v2");
 		this.#ws.addEventListener("open", ()=>{
 			this.#rate_reset_timer = setInterval(()=>this.#rate_reset(), 5100); // overshoot a little
 			this.#rate_reset();
@@ -108,6 +109,7 @@ export class Connection {
 		return true;
 	}
 	#handle_event(name, args) {
+		this.#connected = true;
 		switch(name) {
 			case "USER_JOINED": {
 				let t = this.#tabs[args[0]];
@@ -202,8 +204,8 @@ export class Connection {
 				this.#rate_reset();
 			}; break;
 			case "HELLO": {
-				this.#connected = true;
-				console.log(`connected to ${this.#uri} -- ${args[0]}`);
+				console.log(`connected to ${this.#uri}`);
+				this.#resume_id = args[0];
 				this.#userid = args[1];
 				this.send_event("USER_JOINED", this.#nickcol[0], this.#nickcol[1], this.#tabs.map(e=>e.id.slice(this.id.length+1)));
 			}; break;
