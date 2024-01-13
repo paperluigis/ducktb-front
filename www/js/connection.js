@@ -15,6 +15,7 @@ export class Connection {
 	#tabs = [];
 	#nickcol;
 	#connected = false;
+	#disconn_timer;
 	#c_nick = "duck";
 	#c_color = "#a3e130";
 	constructor(uri, id, nickcol, name) {
@@ -33,6 +34,7 @@ export class Connection {
 		this.#reconn = 0;
 		this.#ws = new WebSocket(new URL("?"+this.#resume_id, this.#uri), "json-v2");
 		this.#ws.addEventListener("open", ()=>{
+			clearTimeout(this.#disconn_timer);
 			this.#rate_reset_timer = setInterval(()=>this.#rate_reset(), 5100); // overshoot a little
 			this.#rate_reset();
 		});
@@ -40,9 +42,13 @@ export class Connection {
 			if(this.#reconn != -1) this.#reconn = setTimeout(()=>this.connect(), 5000);
 			clearInterval(this.#rate_reset_timer);
 			this.#ws = null;
-			if(this.#connected) for(let t of this.#tabs) {
-				t.canSend = false;
-				t.printMsg({ sid: "system", content: "Whoops, we got disconnected.", time: Date.now() });
+			if(this.#connected) {
+				for(let t of this.#tabs) {
+					t.canSend = false;
+				}
+				this.#disconn_timer = setTimeout(()=>
+					this.tabs.forEach(t=>t.printMsg({
+						sid: "system", content: "Whoops, we got disconnected.", time: Date.now() })), 20000);
 			}
 			this.#connected = false;
 		});

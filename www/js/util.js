@@ -105,3 +105,29 @@ export async function copyText(t) {
 		return false;
 	}
 }
+
+export const settings = {};
+
+export function settingsApply(obj, merge=true) {
+	if(!merge) for(let i in Reflect.ownKeys(settings)) delete settings[i];
+	Object.assign(settings, obj);
+	document.body.classList[obj.ae_vtabs ? "add" : "remove"]("vertical-tabs");
+	if(obj.ae_col_bg0) document.body.style.setProperty("--bg0", "#" + obj.ae_col_bg0);
+	if(obj.ae_col_bg1) {
+		document.body.style.setProperty("--bg1", "#" + obj.ae_col_bg1);
+		document.body.style.setProperty("--bg1t", "#" + obj.ae_col_bg1 + "88");
+	}
+	if(obj.ae_col_fg0) document.body.style.setProperty("--fg0", "#" + obj.ae_col_fg0);
+	if(obj.ae_col_fg0d) document.body.style.setProperty("--fg0d", "#" + obj.ae_col_fg0d);
+	if(obj.ae_col_fg1) document.body.style.setProperty("--fg1", "#" + obj.ae_col_fg1);
+}
+
+export function settingsSave(obj) {
+	localStorage["client_settings"] = JSON.stringify(obj);
+}
+
+export function settingsLoad() {
+	return JSON.parse(localStorage["client_settings"] || "{}")
+}
+
+settingsApply(settingsLoad());

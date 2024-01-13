@@ -1,4 +1,4 @@
-import { contextMenu } from "i_dialogs";
+import { settingsChangeDialog, contextMenu } from "i_dialogs";
 
 tri1.onclick = async e => {
 	e.preventDefault();
@@ -43,4 +43,9 @@ tri2.onclick = async e => {
 	let y = e.clientY || (b.top+b.bottom)/2;
 	let rs = await contextMenu(there_is_no_escape(), x, y);
 	if(rs) tri1.textContent = `sus (${rs})`;
+}
+tri3.onclick = async e => {
+	e.preventDefault();
+
+	await settingsChangeDialog();
 }

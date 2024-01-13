@@ -1,3 +1,21 @@
+import { settingsSave, settingsApply, settingsLoad } from "i_util";
+
+function couple_color_inputs(text_input, color_input, onchange) {
+	onchange ||= () => {}
+	color_input.addEventListener("input", () => onchange(text_input.value = color_input.value.slice(1)));
+	color_input.addEventListener("change", () => onchange(text_input.value = color_input.value.slice(1)));
+	text_input.addEventListener("beforeinput", e => { if(e.data && !/^[0-9a-f]*$/.test(e.data)) e.preventDefault() });
+	text_input.addEventListener("input", e => { if(text_input.value.length == 6) {color_input.value = "#" + text_input.value; onchange(text_input.value) }} );
+	color_input.value = "#" + text_input.value;
+	let b = (x) => {
+		color_input.value = "#" + (text_input.value = x);
+		onchange(x);
+	}
+	b.text = text_input;
+	b.color = color_input;
+	return b;
+}
+
 export function nickChangeDialog(cancellable, nick, color) {
 	let ct = document.createElement("dialog");
 	document.body.appendChild(ct);
@@ -12,10 +30,7 @@ export function nickChangeDialog(cancellable, nick, color) {
 	let a4 = ct.querySelector(".a4");
 	let a5 = ct.querySelector(".a5");
 	ct.addEventListener("close", () => ct.remove());
-	a3.addEventListener("input", () => a2.value = a3.value.slice(1));
-	a3.addEventListener("change", () => a2.value = a3.value.slice(1));
-	a2.addEventListener("beforeinput", e => { if(e.data && !/^[0-9a-f]*$/.test(e.data)) e.preventDefault() });
-	a2.addEventListener("input", e => a3.value = "#" + a2.value );
+	couple_color_inputs(a2, a3);
 	a1.addEventListener("input", () => a4.disabled = !a1.value.trim() );
 	a4.disabled = !a1.value.trim();
 	a5.disabled = !cancellable;
@@ -54,14 +69,64 @@ Create/join a room
 export function settingsChangeDialog() {
 	let ct = document.createElement("dialog");
 	document.body.appendChild(ct);
-	ct.innerHTML = `<em>This section is not done yet.</em><div class="prompt_buttons"><button class="x1" disabled>OK</button><button class="x2">Cancel</button></div>`;
+	ct.style.whiteSpace="pre";
+	let br = [];
+	let m = (i, u="#000000") => (br.push(i), `<input class="prompt_input ${i}t" style="width:6ch" value="${u.slice(1)}" maxlength="6" placeholder="hex"><span class="prompt_color_input_wrapper"><input class="prompt_color_input ${i}c" type="color"></span>`);
+	let cs = getComputedStyle(document.body);
+	ct.innerHTML = `
+-- Appearance --
+<input type="checkbox" class="bru0" id="bruh__1"><label for="bruh__1">Vertical tabs</label>
+
+<code>--bg0</code>:  ${m("bru1", cs.getPropertyValue("--bg0"))}
+<code>--bg1</code>:  ${m("bru2", cs.getPropertyValue("--bg1"))}
+<code>--fg0</code>:  ${m("bru3", cs.getPropertyValue("--fg0"))}
+<code>--fg0d</code>: ${m("bru4", cs.getPropertyValue("--fg0d"))}
+<code>--fg1</code>:  ${m("bru5", cs.getPropertyValue("--fg1"))}
+<div class="prompt_buttons"><button class="x1">OK</button><button class="x2">Cancel</button></div>`;
+	let j = () => ({
+		ae_vtabs: br0.checked,
+		ae_col_bg0: br1.text.value,
+		ae_col_bg1: br2.text.value,
+		ae_col_fg0: br3.text.value,
+		ae_col_fg0d: br4.text.value,
+		ae_col_fg1: br5.text.value,
+	});
+	let q = (i, a) => couple_color_inputs(ct.querySelector("."+i+"t"),ct.querySelector("."+i+"c"),a);
 	let x1 = ct.querySelector(".x1");
 	let x2 = ct.querySelector(".x2");
+
+	let br0 = ct.querySelector(".bru0");
+	let br0d = br0.checked = document.body.classList.contains("vertical-tabs");
+
+	br0.addEventListener("change", _=>settingsApply(j()));
+
+	let br1 = q("bru1", _=>settingsApply(j()));
+	let br2 = q("bru2", _=>settingsApply(j()));
+	let br3 = q("bru3", _=>settingsApply(j()));
+	let br4 = q("bru4", _=>settingsApply(j()));
+	let br5 = q("bru5", _=>settingsApply(j()));
+
+	let br1d = br1.text.value;
+	let br2d = br2.text.value;
+	let br3d = br3.text.value;
+	let br4d = br4.text.value;
+	let br5d = br5.text.value;
+
+	function reset() {
+		document.body.classList[br0d?"add":"remove"]("vertical-tabs");
+		br1(br1d);
+		br2(br2d);
+		br3(br3d);
+		br4(br4d);
+		br5(br5d);
+	}
+
 	ct.addEventListener("close", () => ct.remove());
 	ct.showModal();
 	return new Promise(r => {
-		x2.addEventListener("click", () => { ct.close(); r(null) });
-		ct.addEventListener("cancel", () => r(null));
+		x1.addEventListener("click", () => { ct.close(); settingsSave(j()); r(null)});
+		x2.addEventListener("click", () => { ct.close(); reset(); r(null) });
+		ct.addEventListener("cancel", () => { reset(); r(null) });
 	});
 }
 

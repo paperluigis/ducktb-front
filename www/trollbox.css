@@ -1,17 +1,19 @@
 :root {
+	/* Configurable options */
 	--bg0: #082020;
-	--bg1: #144;
-	--bg1t: #1448;
-	--fg0d: #277;
-	--fg0: #4a6;
-	--fg1: #7f9;
-	--dm-receive: #1445;
-	--dm-send: #3115;
+	--bg1: #114444;
+	--bg1t: #11444488;
+	--fg0d: #227777;
+	--fg0: #44aa66;
+	--fg1: #77ff99;
+	--dm-receive: #11444455;
+	--dm-send: #33111155;
 	--border0: .15rem solid;
 	--shadow0: .15rem .15rem .3rem;
-	--backdrop0: brightness(.05) blur(.5rem) brightness(20);
-
     font: 11px monospace;
+
+
+	--backdrop0: brightness(.05) blur(.25rem) brightness(20);
 }
 body {
     background: #000;
@@ -29,6 +31,12 @@ body {
     grid-template-columns: 1fr 150px;
     grid-template-rows: auto 1fr auto;
 }
+
+body.vertical-tabs #container {
+	grid-template-columns: 12ch 1fr 25ch;
+	grid-template-rows: 1fr auto;
+}
+
 
 .scroll,
 .infos {
@@ -48,12 +56,26 @@ body {
     grid-template-columns: 1fr auto;
     gap: 8px;
 }
+body.vertical-tabs #tabbarctr {
+    grid-template-columns: unset;
+    grid-template-rows: 1fr auto;
+	grid-row-end: 2;
+	grid-column-end: 2;
+}
 #tabbar {
     display: flex;
     justify-content: space-around;
 	flex-wrap: wrap;
+	max-height: 5em;
+	overflow-y: auto;
 }
-#tabbar input {
+body.vertical-tabs #tabbar {
+	justify-content: unset;
+	flex-wrap: unset;
+	max-height: unset;
+	flex-flow: column;
+}
+#tabbar input, .tabbed input, input[type=checkbox] {
     width: 0;
     height: 0;
     padding: 0;
@@ -63,13 +85,28 @@ body {
     position: absolute;
     appearance: none;
 }
-#tabbar input:checked + label {
+input[type=checkbox] + label::before {
+	content: "[ ] ";
+}
+input[type=checkbox]:checked + label::before {
+	content: "[x] ";
+}
+input[type=checkbox]:disabled + label::before {
+	color: var(--fg0d);
+}
+#tabbar input:checked + label,
+.tabbed input:checked + label {
     font-weight: bolder;
 	color: var(--fg1);
 }
-#tabbar label {
-    padding: 0 1.5ch;
+#tabbar label, .tabbed label {
+    padding: 0 .5ch;
 	color: var(--fg0);
+}
+body.vertical-tabs #tabbar label {
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
 }
 #tabctl {
 	position: sticky;
@@ -82,6 +119,7 @@ body {
 	height: 1.5rem;
 	line-height: .66;
 	font-size: 1.5rem;
+	flex-grow: 1;
 }
 #tabctl button:not(:first-child) {
 	border-left: var(--border0) var(--fg1);
@@ -102,6 +140,9 @@ body {
     display: grid;
     gap: 8px;
     grid-template-columns: auto 1fr auto;
+}
+body.vertical-tabs #type {
+	grid-column-end: 4;
 }
 #stopdm_btn {
 	vertical-align: bottom;
@@ -461,11 +502,36 @@ b {
 }
 
 
+.tabbed label {
+	border: var(--border0);
+	margin-right: 4px;
+}
+
+.tabbed_bar {
+	display: flex;
+	flex-wrap: wrap;
+	margin-bottom: -1px;
+}
+
+.tabbed_contents {
+	display: none;
+}
+
+.tabbed_contents.active { display: contents; }
+
+.tabbed_body {
+	background: var(--bg1);
+	border: var(--border0);
+}
 
 @media (max-width: 50rem) {
 	.scroll {
 		grid-column-start: 1;
 		grid-column-end: 3;
+	}
+	body.vertical-tabs .scroll {
+		grid-column-start: 2;
+		grid-column-end: 4;
 	}
 	.infos {
 		position: absolute;
@@ -476,5 +542,8 @@ b {
 		max-height: 10rem;
 		background: #0000;
 		backdrop-filter: var(--backdrop0);
+	}
+	body.vertical-tabs .infos {
+		top: 2rem;
 	}
 }
