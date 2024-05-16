@@ -7,28 +7,28 @@ import { connections, Connection } from "i_connection";
 import { copyText, nickHTML, formatMsg, validate_string } from "i_util";
 import * as ele from "i_ui_elements";
 
-import HighlightJS from "https://esm.sh/highlight.js";
+import HighlightJS from "highlight.js";
 //import SimplePeer from "simple-peer";
 import CBOR from "cbor-js";
 
 document.body.addEventListener("mouseleave", ()=>{
-	Tab.focused.ui_handle_mouse();
+	Tab.focused?.ui_handle_mouse();
 });
 document.body.addEventListener("mousemove", e=>{
-	Tab.focused.ui_handle_mouse(e);
+	Tab.focused?.ui_handle_mouse(e);
 });
 ele.input.addEventListener("input", ()=>{
-	Tab.focused.ui_handle_input(true);
+	Tab.focused?.ui_handle_input(true);
 });
 ele.input.addEventListener("keydown", ev=>{
-	if(ev.code == "Enter" && !ev.shiftKey && Tab.focused.ui_handle_send()) {
+	if(ev.code == "Enter" && !ev.shiftKey && Tab.focused?.ui_handle_send()) {
 		acClear();
 		ev.preventDefault();
 	}
 });
 ele.sendbtn.addEventListener("click", ()=>{
 	ele.input.focus();
-	if(Tab.focused.ui_handle_send()) {
+	if(Tab.focused?.ui_handle_send()) {
 		acClear();
 	}
 });
@@ -43,7 +43,7 @@ ele.settingsbtn.addEventListener("click", async ()=>{
 	settingsChangeDialog();
 });
 ele.tab_closebtn.addEventListener("click", ()=>{
-	Tab.focused.close();
+	Tab.focused?.close();
 });
 ele.tab_createbtn.addEventListener("click", async ()=>{
 	let a = await roomCreateDialog();
@@ -82,16 +82,17 @@ window.addEventListener("keydown", e=>{
 		default: return;
 	}
 	e.preventDefault();
-	if(!sw) return;
-	let sa = [...document.querySelectorAll("[name=tabsel]")];
-	let si = sa.findIndex(a=>a.checked) + sw;
-	if(si<0) si=sa.length-1;
-	if(si==sa.length) si=0;
-	sa[si].click();
+	if(sw) {
+		let sa = [...document.querySelectorAll("[name=tabsel]")];
+		let si = sa.findIndex(a=>a.checked) + sw;
+		if(si<0) si=sa.length-1;
+		if(si==sa.length) si=0;
+		sa[si]?.click();
+	}
 });
 ele.input.addEventListener("keydown", e=>{
 	switch(e.code) {
-		case "Escape": Tab.focused.ui_handle_stopdm(); break;
+		case "Escape": Tab.focused?.ui_handle_stopdm(); break;
 		default: return;
 	}
 	e.preventDefault();
@@ -135,7 +136,7 @@ async function nickCtx(elt, ev) {
 	if(m.users[elt.dataset.sid]) {
 		it.push(
 			{ cont: "DM", value: "dm", disabled: !m.canDM },
-			{ cont: "Mention", disabled: true }
+		/*	{ cont: "Mention", disabled: true } */
 		);
 	}
 	let b = await contextMenu(it, ev.clientX, ev.clientY);
@@ -149,8 +150,20 @@ async function nickCtx(elt, ev) {
 function msgCtx(elt, ev) {
 	console.log("message element", elt);
 }
-function roomCtx(elt, ev) {
+async function roomCtx(elt, ev) {
 	console.log("room tab element", elt);
+	let it = [
+		{ cont: "Clear chat", value: "clear" }
+	];
+	// i love stuff that can break in unexpected ways
+	let id = elt.getAttribute("for").replace(/^tsel_/, "");
+	let t = tabs.get(id);
+	if(!t) return console.warn(`right clicked on ${id} even though that room doesn't even exist -- ignoring`);
+	let b = await contextMenu(it, ev.clientX, ev.clientY);
+	switch(b) {
+//		case "close": t.close(); break;
+		case "clear": t.clearChat(); break;
+	}
 }
 
 default_connection.connect();

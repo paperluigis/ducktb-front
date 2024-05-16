@@ -1,7 +1,7 @@
 import { nickHTML, formatMsg, validate_string } from "i_util";
 import * as ele from "i_ui_elements";
 
-import tw from "https://esm.sh/twemoji@14";
+import tw from "twemoji";
 const tw_options = {
 	folder: 'svg',
 	ext: '.svg',
@@ -213,6 +213,7 @@ export class Tab {
 		lcontent.innerHTML = `<div class="msg_ctx">${data.html ? data.content : formatMsg(data.content)}</div>`;
 		tw.parse(lcontent, tw_options);
 		line.appendChild(lcontent);
+		line.og_content = data;
 		this.#el.sinner.appendChild(line);
 		this.scrollDown();
 		for(let a of line.querySelectorAll("img")) a.addEventListener("load", ()=>this.scrollDown());
