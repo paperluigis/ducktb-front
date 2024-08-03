@@ -1,4 +1,8 @@
+import { FancyAnsi } from "fancy-ansi";
+import HighlightJS from "highlight.js";
 import { emojimap } from "./emojimap.js";
+
+const fans = new FancyAnsi();
 
 export function nickHTML(data, eltag="span") {
 	let w = document.createElement(eltag);
@@ -33,6 +37,20 @@ export function formatMsg(a) {
 			.replaceAll("\\", "&#92;");
 	}
 	return shtml(a)
+		.replace(/```(?:(\w+)\n)?(.+?)```|`(.+?)`/gs, function(entire, language, block, inline) {
+			if(inline) return `<code>${unmdhtml(inline)}</code>`;
+			else if(block) {
+				if(language == "ansi" || language == "ans") {
+					let ht = fans.toHtml(uhtml(block));
+					return `<pre class="ansi">${unmdhtml(ht)}</pre>`;
+				} else if(language) try {
+					let sus = HighlightJS.highlight(uhtml(block), { language }).value
+					return `<pre class="hljs">${unmdhtml(sus)}</pre>`;
+				} catch {}
+				return `<pre>${unmdhtml(block)}</pre>`;
+			}
+			else return entire;
+		})
 		.replace(/(\\)?(!)?\[(.+?)\]\((.+?)\)/gs, function (entire, escape, img, alt, src) {
 			if (escape) return entire.slice(1);
 			let e;
@@ -50,17 +68,6 @@ export function formatMsg(a) {
 		})
 		//.replace(/\b((?:https?:\/\/|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?]))/gi, function(duck) {
 		//.replace(/(?:https?:\/\/)(?:[a-z0-9-]+\.)*[a-z0-9]+(?:\/[-a-z0-9+$@#\\/%?=~_()|!:,.;]*(?:[-A-Za-z0-9+$@#\\/%=~_()|](?:&(?:\w+;)?)?)+)?/gi, function(duck) {
-		.replace(/```(?:(\w+)\n)?(.+?)```|`(.+?)`/gs, function(entire, language, block, inline) {
-			if(inline) return `<code>${unmdhtml(inline)}</code>`;
-			else if(block) {
-				if(language) try {
-					let sus = HighlightJS.highlight(uhtml(block), { language }).value
-					return `<pre class="hljs">${unmdhtml(sus)}</pre>`;
-				} catch {}
-				return `<pre>${unmdhtml(block)}</pre>`;
-			}
-			else return entire;
-		})
 		.replace(/(?:https?:\/\/)(?:[a-z0-9-]+\.)*[a-z0-9]+(?:[-a-z0-9+$@#\/%?=~_()|!:,.;]|&amp;)+(?:[-a-z0-9+$@#\/%=~_|]|&amp;)/gi, function(duck) {
 			try {
 				let e = new URL(duck);

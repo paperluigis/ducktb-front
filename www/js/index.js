@@ -7,10 +7,6 @@ import { connections, Connection } from "i_connection";
 import { copyText, nickHTML, formatMsg, validate_string } from "i_util";
 import * as ele from "i_ui_elements";
 
-import HighlightJS from "highlight.js";
-//import SimplePeer from "simple-peer";
-import CBOR from "cbor-js";
-
 document.body.addEventListener("mouseleave", ()=>{
 	Tab.focused?.ui_handle_mouse();
 });
@@ -171,7 +167,6 @@ default_connection.connect();
 
 Object.assign(window, {
 	nickChangeDialog, roomCreateDialog, contextMenu, ele,
-	HighlightJS, CBOR,
 	ac_triggers,
 	tabs, Tab,
 	formatMsg, nickHTML, validate_string, copyText,
