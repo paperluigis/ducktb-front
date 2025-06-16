@@ -38,7 +38,8 @@ export class Connection {
 			this.#rate_reset_timer = setInterval(()=>this.#rate_reset(), 5100); // overshoot a little
 			this.#rate_reset();
 		});
-		this.#ws.addEventListener("close", ()=>{
+		this.#ws.addEventListener("close", (r)=>{
+			console.log("closed", r.code, r.reason);
 			if(this.#reconn != -1) this.#reconn = setTimeout(()=>this.connect(), 5000);
 			clearInterval(this.#rate_reset_timer);
 			this.#ws = null;
