@@ -1,5 +1,6 @@
 import { FancyAnsi } from "fancy-ansi";
-import HighlightJS from "highlight.js";
+// esm.sh is broken??
+//import HighlightJS from "highlight.js";
 import { emojimap } from "./emojimap.js";
 
 const fans = new FancyAnsi();
@@ -44,8 +45,8 @@ export function formatMsg(a) {
 					let ht = fans.toHtml(uhtml(block));
 					return `<pre class="ansi">${unmdhtml(ht)}</pre>`;
 				} else if(language) try {
-					let sus = HighlightJS.highlight(uhtml(block), { language }).value
-					return `<pre class="hljs">${unmdhtml(sus)}</pre>`;
+					//let sus = HighlightJS.highlight(uhtml(block), { language }).value
+					//return `<pre class="hljs">${unmdhtml(sus)}</pre>`;
 				} catch {}
 				return `<pre>${unmdhtml(block)}</pre>`;
 			}

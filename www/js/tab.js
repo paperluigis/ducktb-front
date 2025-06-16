@@ -258,7 +258,7 @@ export class Tab {
 	}
 	ui_handle_send() {
 		if(ele.sendbtn.disabled) return false;
-		if(this.onMessage(ele.input.value.trim(), this.#dmTarget) == false) return false;
+		if(this.onMessage(ele.input.value, this.#dmTarget) == false) return false;
 		ele.input.value="";
 		this.focus();
 		this.#isTyping = false;
