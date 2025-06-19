@@ -8,9 +8,9 @@ const tw_options = {
 	base: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/', // maxcdn shutdown
 	callback(icon, options, variant) {
 		switch (icon) {
-		case 'a9': // copyright
-		case 'ae': // registered trademark
-		case '2122': // trademark
+		case 'a9':   // ⓒ copyright
+		case 'ae':   // ⓡ registered trademark
+		case '2122': // ™ trademark
 			return false;
 		}
 		return ''.concat(options.base, options.size, '/', icon, options.ext);
@@ -33,7 +33,7 @@ export class Tab {
 	static #creating = false;
 	constructor(id) {
 		if(!Tab.#creating)
-			throw new Error("bro you can't just call the constructor man use Tab.create()");
+			throw new Error("use Tab.create()");
 		Tab.#creating = false;
 		this.#id = id;
 		// TODO: ui
@@ -48,6 +48,7 @@ export class Tab {
 		scroll.appendChild(sinner);
 		let infos = document.createElement("div");
 		infos.className = "infos";
+		infos.innerHTML = "<em>ONLINE - 0</em>";
 		tabelt.appendChild(infos);
 		ele.tabctr.appendChild(tabelt);
 		let opt = document.createElement("input");
@@ -171,7 +172,7 @@ export class Tab {
 		this.#typing = [...data];
 		this.updateUI();
 	}
-	updateUsers(data) {
+	userUpdate(data) {
 		this.#el.infos.innerHTML = `<em>ONLINE - ${data.length}</em>`;
 		this.#users = {};
 		for(let user of data) {
@@ -186,6 +187,31 @@ export class Tab {
 		if(!this.#users[this.#dmTarget]) {
 			this.#dmTarget = null;
 			this.updateUI();
+		}
+	}
+	userAdd(user) {
+		this.#users[user.sid] = user;
+		let elt = this.#el.infos.querySelector(':scope>[data-sid="'+user.sid+'"]')
+		if(elt) {
+			this.#el.infos.replaceChild(nickHTML(user), elt);
+		} else {
+			this.#el.infos.querySelector("em:first-child").innerText = `ONLINE - ${Object.values(this.#users).length}`;
+			this.#el.infos.appendChild(nickHTML(user));
+		}
+	}
+	userRemove(sid) {
+		if(sid in this.#users) {
+			delete this.#users[sid];
+		}
+		this.#el.infos.querySelector("em:first-child").innerText = `ONLINE - ${Object.values(this.#users).length}`;
+		let elt = this.#el.infos.querySelector(':scope>[data-sid="'+sid+'"]');
+		if(elt) { this.#el.infos.removeChild(elt); }
+		if(sid in this.#mice) {
+			this.#mice[sid].remove();
+			delete this.#mice[sid];
+		}
+		if(this.#dmTarget == sid) {
+			this.#dmTarget = null;
 		}
 	}
 	printMsg(data, countUnread, dm="") {
@@ -210,8 +236,31 @@ export class Tab {
 		line.appendChild(nickHTML(user));
 		let lcontent = document.createElement("span");
 		lcontent.className = "msg";
-		lcontent.innerHTML = `<div class="msg_ctx">${data.html ? data.content : formatMsg(data.content)}</div>`;
-		tw.parse(lcontent, tw_options);
+		let lcontent_inner = document.createElement("div");
+		lcontent_inner.className = "msg_ctx";
+		switch(data.content_type || "message") {
+			case "message":
+				lcontent_inner.innerHTML = formatMsg(data.content);
+				tw.parse(lcontent_inner, tw_options);
+				break;
+			case "user_joined":
+				lcontent_inner.appendChild(nickHTML(data.content));
+				lcontent_inner.insertAdjacentHTML("beforeend","<em> joined</em>");
+				break;
+			case "user_left":
+				lcontent_inner.appendChild(nickHTML(data.content));
+				lcontent_inner.insertAdjacentHTML("beforeend","<em> left</em>");
+				break;
+			case "user_ch_nick":
+				lcontent_inner.appendChild(nickHTML(data.content[0]));
+				lcontent_inner.insertAdjacentHTML("beforeend","<em> is now known as </em>");
+				lcontent_inner.appendChild(nickHTML(data.content[1]));
+				break;
+			default:
+				lcontent_inner.innerHTML = "<em>Unknown message type: </em>";
+				lcontent_inner.insertAdjacentText("beforeend",data.content_type+": "+JSON.stringify(data.content));
+		}
+		lcontent.appendChild(lcontent_inner);
 		line.appendChild(lcontent);
 		line.og_content = data;
 		this.#el.sinner.appendChild(line);
