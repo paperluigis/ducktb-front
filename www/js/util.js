@@ -10,9 +10,11 @@ export function nickHTML(data, eltag="span") {
 	w.className = "nick";
 	w.style.color = data.color;
 	w.textContent = data.nick;
-	w.dataset.sid = data.sid;
-	w.dataset.home = data.home;
-	w.dataset.trhome = (data.home||"").slice(0, 6);
+	if(data.sid) w.dataset.sid = data.sid;
+	if(data.home) {
+		w.dataset.home = data.home;
+		w.dataset.trhome = (data.home||"").slice(0, 6);
+	}
 	return w;
 }
 export function formatMsg(a) {

@@ -216,6 +216,7 @@ export class Tab {
 	}
 	printMsg(data, countUnread, dm="") {
 		let line = document.createElement("div");
+		if(data.id) line.dataset.msgid = data.id;
 		line.className = "line";
 		let uid = data.sid;
 		if(dm=="t") {
@@ -238,6 +239,9 @@ export class Tab {
 		lcontent.className = "msg";
 		let lcontent_inner = document.createElement("div");
 		lcontent_inner.className = "msg_ctx";
+		if(countUnread == null) {
+			countUnread = ["message"].includes(data.content_type);
+		}
 		switch(data.content_type || "message") {
 			case "message":
 				lcontent_inner.innerHTML = formatMsg(data.content);

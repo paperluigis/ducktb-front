@@ -115,26 +115,22 @@ async function nickCtx(elt, ev) {
 	console.log("nick element", elt);
 	let m = Tab.focused;
 	let it = [];
-	if(elt.dataset.sid == elt.dataset.home && elt.dataset.sid) {
-		it.push({ cont: `id: ${elt.dataset.sid}`, disabled: true })
-	} else {
-		if(elt.dataset.sid) it.push({ cont: `sid: ${elt.dataset.sid}`, disabled: true });
-		if(elt.dataset.home) it.push({ cont: `home: ${elt.dataset.home}`, disabled: true });
-	}
-	it.push(
-		{ separator: true },
-		{ cont: "Copy", inner: [
-			{ cont: "Copy nick", value: "copy_nick" },
-			{ cont: "Copy home", value: "copy_home", disabled: !elt.dataset.home },
-			{ cont: "Copy sid", value: "copy_sid", disabled: !elt.dataset.sid },
-		] }
-	);
 	if(m.users[elt.dataset.sid]) {
 		it.push(
 			{ cont: "DM", value: "dm", disabled: !m.canDM },
 		/*	{ cont: "Mention", disabled: true } */
+			{ separator: true },
 		);
 	}
+	if(elt.dataset.sid == elt.dataset.home && elt.dataset.sid) {
+		it.push({ cont: `copy id: ${elt.dataset.sid}`, value: "copy_sid" })
+	} else {
+		if(elt.dataset.sid) it.push({ cont: `copy sid: ${elt.dataset.sid}`, value: "copy_sid" });
+		if(elt.dataset.home) it.push({ cont: `copy home: ${elt.dataset.home}`, value: "copy_home" });
+	}
+	it.push(
+		{ cont: "copy nick", value: "copy_nick" },
+	);
 	let b = await contextMenu(it, ev.clientX, ev.clientY);
 	switch(b) {
 		case "dm": m.ui_handle_startdm(elt.dataset.sid); break;
@@ -143,8 +139,15 @@ async function nickCtx(elt, ev) {
 		case "copy_sid": copyText(elt.dataset.sid); break;
 	}
 }
-function msgCtx(elt, ev) {
+async function msgCtx(elt, ev) {
 	console.log("message element", elt);
+	let m = Tab.focused;
+	let it = [];
+	if(elt.dataset.msgid) it.push({ cont: `copy id: ${elt.dataset.msgid}`, value: "copy_msgid" });
+	let b = await contextMenu(it, ev.clientX, ev.clientY);
+	switch(b) {
+		case "copy_msgid": copyText(elt.dataset.msgid); break;
+	}
 }
 async function roomCtx(elt, ev) {
 	console.log("room tab element", elt);

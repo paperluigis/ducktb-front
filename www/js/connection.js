@@ -197,7 +197,7 @@ export class Connection {
 			}; break;
 			case "MESSAGE": {
 				let t = this.#tabs[args[0]];
-				t.printMsg(args[1], true);
+				t.printMsg(args[1]);
 			}; break;
 			case "MESSAGE_DM": {
 				let t = this.#tabs[args[0]];
