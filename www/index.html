@@ -7,7 +7,8 @@
 		<meta name="title" content="ducktb">
 		<meta name="description" content="not a trollbox clone anymore, at all, not even visually">
 		<title>duck"tb"</title>
-		<link id="main_stylesheet" rel="stylesheet" href="trollbox.css?3">
+		<link rel="stylesheet" href="trollbox_layout.css?0">
+		<link id="style_main" rel="stylesheet" href="styles/duckos.css">
 		<link rel="stylesheet" href="base16-apathy-hljs.css">
 		<script type="importmap">
 			{
@@ -26,6 +27,25 @@
 					"twemoji": "https://esm.sh/twemoji@14"
 				}
 			}
+		</script>
+		<script>
+			globalThis.tb_styles = [{
+				name: "default",
+				id: "duckos",
+				path: "styles/duckos.css",
+				vars: {
+					"bg0": { "default": "#082020", "type": "color" },
+					"bg1": { "default": "#114444", "type": "color" },
+					"fg0d": { "default": "#227777", "type": "color" },
+					"fg0": { "default": "#44aa66", "type": "color" },
+					"fg1": { "default": "#77ff99", "type": "color" },
+				}
+			}, {
+				name: "trollbox",
+				id: "windows93",
+				path: "styles/windows93.css",
+				vars: {}
+			}];
 		</script>
 		<script defer type="module" src="./js/index.js?4"></script>
 	</head>

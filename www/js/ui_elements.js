@@ -1,3 +1,4 @@
+export const style_main = document.querySelector("#style_main");
 export const autocomp_bar = document.querySelector("#autocomp_bar");
 export const input = document.querySelector("#input");
 export const sendbtn = document.querySelector("#send");

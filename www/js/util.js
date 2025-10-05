@@ -5,6 +5,13 @@ import { emojimap } from "./emojimap.js";
 
 const fans = new FancyAnsi();
 
+export function shtml(a) {
+	return a
+		.replaceAll("&", "&amp;")
+		.replaceAll("<", "&lt;")
+		.replaceAll('"', "&quot;");
+}
+
 export function nickHTML(data, eltag="span") {
 	let w = document.createElement(eltag);
 	w.className = "nick";
@@ -18,12 +25,6 @@ export function nickHTML(data, eltag="span") {
 	return w;
 }
 export function formatMsg(a) {
-	function shtml(a) {
-		return a
-			.replaceAll("&", "&amp;")
-			.replaceAll("<", "&lt;")
-			.replaceAll('"', "&quot;");
-	}
 	// undoes replacements done by shtml
 	function uhtml(a) {
 		return a
@@ -116,21 +117,34 @@ export async function copyText(t) {
 	}
 }
 
-export const settings = {};
+export const settings = {
+	ae_style: "duckos",
+	// Record<id:string, Record<prop:string, value:string>>
+	ae_style_props: {},
+};
 
 export function settingsApply(obj, merge=true) {
 	if(!merge) for(let i in Reflect.ownKeys(settings)) delete settings[i];
 	Object.assign(settings, obj);
 	document.body.classList[obj.ae_vtabs ? "add" : "remove"]("vertical-tabs");
-	if(obj.ae_col_bg0) document.body.style.setProperty("--bg0", "#" + obj.ae_col_bg0);
-	if(obj.ae_col_bg1) {
-		document.body.style.setProperty("--bg1", "#" + obj.ae_col_bg1);
-		document.body.style.setProperty("--bg1t", "#" + obj.ae_col_bg1 + "88");
+
+	let style = tb_styles.find(e=>obj.ae_style==e.id) || tb_styles[0];
+	style_main.href = style.path;
+	for(let [name, value] of Object.entries(settings.ae_style_props[obj.ae_style]||{})) {
+		if(style.vars[name]?.type == "color") {
+			document.documentElement.style.setProperty("--"+name, value);
+		}
 	}
-	if(obj.ae_col_fg0) document.body.style.setProperty("--fg0", "#" + obj.ae_col_fg0);
-	if(obj.ae_col_fg0d) document.body.style.setProperty("--fg0d", "#" + obj.ae_col_fg0d);
-	if(obj.ae_col_fg1) document.body.style.setProperty("--fg1", "#" + obj.ae_col_fg1);
+	// if(obj.ae_col_bg0) document.body.style.setProperty("--bg0", "#" + obj.ae_col_bg0);
+	// if(obj.ae_col_bg1) {
+	// 	document.body.style.setProperty("--bg1", "#" + obj.ae_col_bg1);
+	// 	document.body.style.setProperty("--bg1t", "#" + obj.ae_col_bg1 + "88");
+	// }
+	// if(obj.ae_col_fg0) document.body.style.setProperty("--fg0", "#" + obj.ae_col_fg0);
+	// if(obj.ae_col_fg0d) document.body.style.setProperty("--fg0d", "#" + obj.ae_col_fg0d);
+	// if(obj.ae_col_fg1) document.body.style.setProperty("--fg1", "#" + obj.ae_col_fg1);
 }
+
 
 export function settingsSave(obj) {
 	localStorage["client_settings"] = JSON.stringify(obj);

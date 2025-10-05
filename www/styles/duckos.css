@@ -2,7 +2,7 @@
 	/* Configurable options */
 	--bg0: #082020;
 	--bg1: #114444;
-	--bg1t: #11444488;
+	--bg1t: color(from var(--bg1) srgb r g b / 0.5);
 	--fg0d: #227777;
 	--fg0: #44aa66;
 	--fg1: #77ff99;
@@ -11,79 +11,26 @@
 	--border0: .15rem solid;
 	--shadow0: .15rem .15rem .3rem;
     font: 11px monospace;
-
-
+    
 	--backdrop0: brightness(.05) blur(.25rem) brightness(20);
 }
+
 body {
-    background: #000;
-    user-select: none;
     background: var(--bg1);
     color: var(--fg1);
 }
 
 #container {
-    display: grid;
-    position: fixed;
-    inset: 0;
     gap: 8px;
     padding: 8px;
-    grid-template-columns: 1fr 150px;
-    grid-template-rows: auto 1fr auto;
 }
 
-body.vertical-tabs #container {
-	grid-template-columns: 12ch 1fr 25ch;
-	grid-template-rows: 1fr auto;
-}
-
-
-.scroll,
-.infos {
+.scroll, .infos {
     padding: 1px 2px;
-    contain: layout paint;
-    overflow-y: auto;
-    overflow-x: hidden;
     background: var(--bg0);
 }
-.infos > * {
-	display: block;
-}
 #tabbarctr {
-    grid-column-start: 1;
-    grid-column-end: 3;
-    display: grid;
-    grid-template-columns: 1fr auto;
     gap: 8px;
-}
-body.vertical-tabs #tabbarctr {
-    grid-template-columns: unset;
-    grid-template-rows: 1fr auto;
-	grid-row-end: 2;
-	grid-column-end: 2;
-}
-#tabbar {
-    display: flex;
-    justify-content: space-around;
-	flex-wrap: wrap;
-	max-height: 5em;
-	overflow-y: auto;
-}
-body.vertical-tabs #tabbar {
-	justify-content: unset;
-	flex-wrap: unset;
-	max-height: unset;
-	flex-flow: column;
-}
-#tabbar input, .tabbed input, input[type=checkbox] {
-    width: 0;
-    height: 0;
-    padding: 0;
-    margin: 0;
-    border: 0;
-    outline: none;
-    position: absolute;
-    appearance: none;
 }
 input[type=checkbox] + label::before {
 	content: "[ ] ";
@@ -95,59 +42,28 @@ input[type=checkbox]:disabled + label::before {
 	color: var(--fg0d);
 }
 #tabbar input:checked + label,
-.tabbed input:checked + label {
+.tabbed_bar input:checked + label {
     font-weight: bolder;
 	color: var(--fg1);
 }
-#tabbar label, .tabbed label {
+#tabbar label, .tabbed_bar label {
     padding: 0 .5ch;
 	color: var(--fg0);
 }
-body.vertical-tabs #tabbar label {
-	white-space: nowrap;
-	text-overflow: ellipsis;
-	overflow: hidden;
-}
-#tabctl {
-	position: sticky;
-	display: flex;
-}
 #tabctl button {
 	border: none;
-	display: inline-block;
-	width: 2rem;
-	height: 1.5rem;
-	line-height: .66;
-	font-size: 1.5rem;
-	flex-grow: 1;
+	font-size: 1.5em;
+	line-height: 0;
 }
 #tabctl button:not(:first-child) {
 	border-left: var(--border0) var(--fg1);
 }
-#tab_create::before {
-	content: "+";
-}
-#tab_close::before,
-#stopdm_btn::before {
-	content: "×";
-}
-#settingsbtn::before {
-	content: "⛭";
-}
+#tab_create::before { content: "+"; }
+#tab_close::before, #stopdm_btn::before { content: "\00d7"; }
+#settingsbtn::before { content: "\26ed"; }
+
 #type {
-    grid-column-start: 1;
-    grid-column-end: 3;
-    display: grid;
     gap: 8px;
-    grid-template-columns: auto 1fr auto;
-}
-body.vertical-tabs #type {
-	grid-column-end: 4;
-}
-#stopdm_btn {
-	vertical-align: bottom;
-	height: calc(100% + 4px);
-	margin: -2px 4px -2px -5px;
 }
 .tab {
 	display: none;
@@ -159,19 +75,7 @@ body.vertical-tabs #type {
     box-shadow: var(--shadow0);
     border: var(--border0);
 }
-#input_wrap {
-	position: relative;
-}
-#input {
-	width: 100%;
-	height: 100%;
-	box-sizing: border-box;
-}
 #autocomp_bar {
-	box-sizing: border-box;
-	max-width: 100%;
-	position: absolute;
-	bottom: calc(.5rem + 100%);
 	backdrop-filter: var(--backdrop0);
 }
 .autocomp_entry {
@@ -183,77 +87,24 @@ body.vertical-tabs #type {
 	background: var(--fg0);
 }
 
+a { color: var(--fg1); }
+a:active { color: var(--fg0); }
 
-a {
-    color: var(--fg1);
-}
-a:active {
-    color: var(--fg0);
-}
-
-code, pre {
-	background: var(--bg1);
-}
-pre {
-	margin: 0;
-	padding: .5rem 1rem;
-	white-space: pre-wrap;
-	max-width: 75%;
-}
-
-button {
-    font: inherit;
-    appearance: none;
-    border-radius: 0;
+code, pre {	background: var(--bg1); }
+button, select {
     color: var(--fg1);
     background: var(--bg1);
     border: var(--border0);
 }
 
-button:disabled, textarea:disabled {
-    color: var(--fg0d);
-}
+button:disabled, textarea:disabled { color: var(--fg0d); }
 
-button:not(:disabled):active {
-    background: var(--fg0);
-}
+button:not(:disabled):active { background: var(--fg0); }
 
 textarea, input {
-    font: inherit;
     border: var(--border0);
-    resize: none;
-    text-indent: 0;
     color: var(--fg1);
     background: var(--bg1);
-    margin: 0;
-}
-
-
-label,
-.ui_menu--scroller>.ui_menu__up_handler:disabled,
-.ui_menu--scroller>.ui_menu__down_handler:disabled,
-.ui_menu .ui_menu__item--disabled,
-html,
-body,
-input[readonly]:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
-textarea[readonly] {
-    cursor: url(cursors/default.cur), default
-}
-
-input[type=checkbox],
-input[type=radio],
-button,
-a {
-    cursor: url(cursors/pointer.cur), pointer
-}
-
-input,
-textarea {
-    cursor: url(cursors/text.cur), text
-}
-
-html>body [disabled] {
-    cursor: url(cursors/not-allowed.cur), not-allowed
 }
 
 :focus {
@@ -342,14 +193,10 @@ dialog:not(.context_menu), .context_map {
     margin-left: 4px;
 }
 .prompt_color_input_wrapper {
-    margin-left: 4px;
-	display: inline-block;
-    contain: strict;
-    box-sizing: border-box;
-    vertical-align: bottom;
-    width: 1.5rem;
-    height: 1.5rem;
     border: var(--border0) var(--fg1);
+	box-sizing: content-box;
+	width: 1.5rem;
+	height: 1.5rem;
 }
 .prompt_color_input {
 	appearance: none;
@@ -358,6 +205,9 @@ dialog:not(.context_menu), .context_map {
     width: 3rem;
     margin: -.5rem;
     height: 3rem;
+}
+.prompt_color_input_hex {
+	width: 6ch;
 }
 
 h1,h2,h3,h4,h5,h6 { margin: 0; }
@@ -508,22 +358,20 @@ b {
 }
 
 
-.tabbed label {
+.tabbed_bar label {
 	border: var(--border0);
+	border-bottom-color: var(--fg1);
 	margin-right: 4px;
 }
 
+.tabbed_bar input:checked+label {
+	border-bottom: none;
+	background: var(--bg1);
+}
+
 .tabbed_bar {
-	display: flex;
-	flex-wrap: wrap;
 	margin-bottom: -1px;
 }
-
-.tabbed_contents {
-	display: none;
-}
-
-.tabbed_contents.active { display: contents; }
 
 .tabbed_body {
 	background: var(--bg1);
@@ -553,3 +401,5 @@ b {
 		top: 2rem;
 	}
 }
+
+
