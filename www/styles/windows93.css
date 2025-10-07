@@ -3,25 +3,25 @@
 	font-family: "tomo";
 	size-adjust: 80%;
 	src: url("../fonts/tomo/tomo.eot") format('embedded-opentype'),
-         url("../fonts/tomo/tomo.woff2") format('woff2'),
-         url("../fonts/tomo/tomo.woff") format('woff'),
-         url("../fonts/tomo/tomo.ttf") format('truetype');
+	     url("../fonts/tomo/tomo.woff2") format('woff2'),
+	     url("../fonts/tomo/tomo.woff") format('woff'),
+	     url("../fonts/tomo/tomo.ttf") format('truetype');
 }
 @font-face {
 	font-family: "px_icons";
 	size-adjust: 80%;
 	src: url("../fonts/px_icons/px_icons.eot") format('embedded-opentype'),
-         url("../fonts/px_icons/px_icons.woff2") format('woff2'),
-         url("../fonts/px_icons/px_icons.woff") format('woff'),
-         url("../fonts/px_icons/px_icons.ttf") format('truetype');
+	     url("../fonts/px_icons/px_icons.woff2") format('woff2'),
+	     url("../fonts/px_icons/px_icons.woff") format('woff'),
+	     url("../fonts/px_icons/px_icons.ttf") format('truetype');
 }
 @font-face {
 	font-family: "px_sans_nouveaux";
 	size-adjust: 80%;
 	src: url("../fonts/px_sans_nouveaux/px_sans_nouveaux.eot") format('embedded-opentype'),
-         url("../fonts/px_sans_nouveaux/px_sans_nouveaux.woff2") format('woff2'),
-         url("../fonts/px_sans_nouveaux/px_sans_nouveaux.woff") format('woff'),
-         url("../fonts/px_sans_nouveaux/px_sans_nouveaux.ttf") format('truetype');
+	     url("../fonts/px_sans_nouveaux/px_sans_nouveaux.woff2") format('woff2'),
+	     url("../fonts/px_sans_nouveaux/px_sans_nouveaux.woff") format('woff'),
+	     url("../fonts/px_sans_nouveaux/px_sans_nouveaux.ttf") format('truetype');
 }
 
 :root {
@@ -31,6 +31,7 @@
 	--tb-fg: #000000;
 	
 	font: 10px "px_sans_nouveaux", sans;
+	font-synthesis: none;
 }
 
 /* === */
